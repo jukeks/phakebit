@@ -1,15 +1,15 @@
+mod state;
 mod cpu;
-mod instructionset;
 mod memory;
 
+use state::CPUState;
 use cpu::CPU;
-use instructionset::InstructionSet;
 use memory::Memory;
 
 fn main() {
     let memory = Memory::new();
-    let mut cpu = CPU::new(memory);
-    cpu.reset();
-    let mut instruction_set = InstructionSet::new(cpu);
+    let mut state = CPUState::new(memory);
+    state.reset();
+    let mut instruction_set = CPU::new(state);
     instruction_set.execute(1000);
 }
