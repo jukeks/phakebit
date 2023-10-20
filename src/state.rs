@@ -2,6 +2,7 @@ use crate::memory::Memory;
 
 pub const ZERO_PAGE: u16 = 0x000;
 pub const STACK_PAGE: u16 = 0x100;
+pub const RESET_VECTOR_ADDR: u16 = 0xFFFC;
 
 pub struct CPUState {
     memory: Memory,
@@ -37,8 +38,8 @@ impl CPUState {
         self.status = 0;
         self.cycles = 0;
 
-        let low = self.read_byte(0xFFFC) as u16;
-        let high = self.read_byte(0xFFFD) as u16;
+        let low = self.read_byte(RESET_VECTOR_ADDR) as u16;
+        let high = self.read_byte(RESET_VECTOR_ADDR + 1) as u16;
         self.pc = (high << 8) | low;
     }
 
@@ -172,8 +173,27 @@ impl CPUState {
             self.status &= 0b1111_1110;
         }
     }
-}
 
+    pub fn set_v(&mut self, v: bool) {
+        if v {
+            self.status |= 0b0100_0000;
+        } else {
+            self.status &= 0b1011_1111;
+        }
+    }
+
+    pub fn get_n(&self) -> u8 {
+        self.status & 0b1000_0000
+    }
+
+    pub fn get_c(&self) -> u8 {
+        self.status & 0b0000_0001
+    }
+
+    pub fn get_z(&self) -> u8 {
+        self.status & 0b0000_0010
+    }
+}
 
 mod tests {
     #[test]

@@ -1,10 +1,10 @@
-mod state;
 mod cpu;
 mod memory;
+mod state;
 
-use state::CPUState;
 use cpu::CPU;
 use memory::Memory;
+use state::CPUState;
 
 fn main() {
     let memory = Memory::new();
