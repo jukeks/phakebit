@@ -94,7 +94,7 @@ impl CPU {
                 Operation::CPY => self.cmp(instruction.mode),
                 Operation::INC => self.inc(instruction.mode),
                 Operation::DEC => self.dec(instruction.mode),
-                Operation::TSX => self.txs(),
+                Operation::TSX => self.tsx(),
                 Operation::BIT => self.bit(instruction.mode),
             }
 
