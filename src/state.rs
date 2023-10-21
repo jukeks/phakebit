@@ -30,19 +30,6 @@ impl CPUState {
         }
     }
 
-    pub fn print_state(&self) {
-        let n_flag = (self.status >> 7) & 1;
-        let v_flag = (self.status >> 6) & 1;
-        let d_flag = (self.status >> 3) & 1;
-        let i_flag = (self.status >> 2) & 1;
-        let z_flag = (self.status >> 1) & 1;
-        let c_flag = self.status & 1;
-
-        print!("|{:02X} {:02X} {:02X} {:02X}|{}{}{}{}{}{}|",
-            self.a,  self.x, self.y,  self.sp, n_flag, v_flag, d_flag, i_flag, z_flag, c_flag
-        );
-    }
-
     pub fn reset(&mut self) {
         self.a = 0;
         self.x = 0;

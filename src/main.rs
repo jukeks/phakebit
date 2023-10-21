@@ -1,6 +1,7 @@
 mod cpu;
 mod memory;
 mod state;
+mod instrumentation;
 
 use cpu::CPU;
 use memory::Memory;
