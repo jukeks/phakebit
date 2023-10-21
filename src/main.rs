@@ -1,6 +1,6 @@
 mod cpu;
-mod instrumentation;
 mod instruction;
+mod instrumentation;
 mod memory;
 mod state;
 

@@ -15,41 +15,19 @@ impl CPU {
 
     fn read_operand(&mut self, mode: AddressingMode) -> Option<u16> {
         match mode {
-            AddressingMode::REL => {
-                Some(self.state.read_byte(self.state.pc) as u16)
-            }
+            AddressingMode::REL => Some(self.state.read_byte(self.state.pc) as u16),
             AddressingMode::ACC => None,
             AddressingMode::IMPL => None,
-            AddressingMode::IMM => {
-                Some(self.state.read_byte(self.state.pc) as u16)
-            }
-            AddressingMode::ZPG => {
-                Some(self.state.read_byte(self.state.pc) as u16)
-            }
-            AddressingMode::ZPGX => {
-                Some(self.state.read_byte(self.state.pc) as u16)
-            }
-            AddressingMode::ZPGY => {
-                Some(self.state.read_byte(self.state.pc) as u16)
-            }
-            AddressingMode::ABS => {
-                Some(self.state.read_word(self.state.pc))
-            }
-            AddressingMode::ABSX => {
-                Some(self.state.read_word(self.state.pc))
-            }
-            AddressingMode::ABSY => {
-                Some(self.state.read_word(self.state.pc))
-            }
-            AddressingMode::IND => {
-                Some(self.state.read_byte(self.state.pc) as u16)
-            }
-            AddressingMode::XIND => {
-                Some(self.state.read_byte(self.state.pc) as u16)
-            }
-            AddressingMode::INDY => {
-                Some(self.state.read_byte(self.state.pc) as u16)
-            }
+            AddressingMode::IMM => Some(self.state.read_byte(self.state.pc) as u16),
+            AddressingMode::ZPG => Some(self.state.read_byte(self.state.pc) as u16),
+            AddressingMode::ZPGX => Some(self.state.read_byte(self.state.pc) as u16),
+            AddressingMode::ZPGY => Some(self.state.read_byte(self.state.pc) as u16),
+            AddressingMode::ABS => Some(self.state.read_word(self.state.pc)),
+            AddressingMode::ABSX => Some(self.state.read_word(self.state.pc)),
+            AddressingMode::ABSY => Some(self.state.read_word(self.state.pc)),
+            AddressingMode::IND => Some(self.state.read_byte(self.state.pc) as u16),
+            AddressingMode::XIND => Some(self.state.read_byte(self.state.pc) as u16),
+            AddressingMode::INDY => Some(self.state.read_byte(self.state.pc) as u16),
         }
     }
 
@@ -134,7 +112,6 @@ impl CPU {
             t.print();
         }
     }
-
 
     fn adc(&mut self, mode: AddressingMode) {
         let operand = self.state.fetch_operand(mode);
@@ -247,8 +224,7 @@ impl CPU {
     fn bpl(&mut self, mode: AddressingMode) {
         let address = self.state.resolve_address(mode);
         if self.state.get_n() == 0 {
-            self.state
-                .set_pc(address);
+            self.state.set_pc(address);
             self.state.increment_cycles(1);
         }
     }
@@ -278,16 +254,14 @@ impl CPU {
     fn bcs(&mut self, mode: AddressingMode) {
         let address = self.state.resolve_address(mode);
         if self.state.get_c() == 1 {
-            self.state
-                .set_pc(address);
+            self.state.set_pc(address);
         }
     }
 
     fn bcc(&mut self, mode: AddressingMode) {
         let address = self.state.resolve_address(mode);
         if self.state.get_c() == 0 {
-            self.state
-                .set_pc(address);
+            self.state.set_pc(address);
         }
     }
 
@@ -404,8 +378,7 @@ impl CPU {
     fn bne(&mut self, mode: AddressingMode) {
         let address = self.state.resolve_address(mode);
         if self.state.get_z() == 0 {
-            self.state
-                .set_pc(address);
+            self.state.set_pc(address);
         }
     }
 
@@ -466,24 +439,21 @@ impl CPU {
     fn bmi(&mut self, mode: AddressingMode) {
         let address = self.state.resolve_address(mode);
         if self.state.get_n() == 1 {
-            self.state
-                .set_pc(address);
+            self.state.set_pc(address);
         }
     }
 
     fn bvs(&mut self, mode: AddressingMode) {
         let address = self.state.resolve_address(mode);
         if self.state.get_v() == 1 {
-            self.state
-                .set_pc(address);
+            self.state.set_pc(address);
         }
     }
 
     fn bvc(&mut self, mode: AddressingMode) {
         let address = self.state.resolve_address(mode);
         if self.state.get_v() == 0 {
-            self.state
-                .set_pc(address);
+            self.state.set_pc(address);
         }
     }
 
@@ -534,7 +504,6 @@ impl CPU {
         self.state.set_v((operand & 0b0100_0000) != 0);
         self.state.cycles += 1;
     }
-
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
-use crate::memory::Memory;
 use crate::instruction::AddressingMode;
+use crate::memory::Memory;
 
 pub const ZERO_PAGE: u16 = 0x000;
 pub const STACK_PAGE: u16 = 0x100;
@@ -201,7 +201,6 @@ impl CPUState {
         self.status & 0b0000_0010
     }
 
-
     pub fn resolve_address(&mut self, mode: AddressingMode) -> u16 {
         match mode {
             AddressingMode::ZPG => self.fetch_byte() as u16,
@@ -291,9 +290,7 @@ impl CPUState {
                 self.read_byte(address)
             }
             AddressingMode::ACC => self.get_a(),
-            AddressingMode::REL => {
-                self.fetch_byte()
-            },
+            AddressingMode::REL => self.fetch_byte(),
             _ => panic!("Unsupported addressing mode: {:?}", mode),
         }
     }

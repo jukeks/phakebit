@@ -1,4 +1,3 @@
-
 #[derive(Copy, Clone, Debug)]
 pub enum AddressingMode {
     ACC,
@@ -88,7 +87,6 @@ pub struct Instruction {
     pub mode: AddressingMode,
     pub cycles: u8,
 }
-
 
 pub fn opcode_to_instruction(opcode: u8) -> Instruction {
     match opcode {
@@ -517,7 +515,7 @@ pub fn opcode_to_instruction(opcode: u8) -> Instruction {
             mode: AddressingMode::ABSY,
             cycles: 4,
         },
-        
+
         0x7D => Instruction {
             opcode: 0x7D,
             name: Operation::ADC,
@@ -530,7 +528,7 @@ pub fn opcode_to_instruction(opcode: u8) -> Instruction {
             mode: AddressingMode::ABSX,
             cycles: 7,
         },
-        
+
         0x81 => Instruction {
             opcode: 0x81,
             name: Operation::STA,

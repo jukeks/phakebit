@@ -1,6 +1,6 @@
 use crate::instruction;
-use crate::instruction::AddressingMode;
 use crate::instruction::opcode_to_instruction;
+use crate::instruction::AddressingMode;
 
 pub struct Trace {
     pc: u16,
@@ -89,7 +89,6 @@ impl Trace {
         );
     }
 }
-
 
 fn format_operation(operation: instruction::Operation) -> String {
     format!("{:?}", operation)
