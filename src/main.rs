@@ -12,6 +12,6 @@ fn main() {
     let memory = Memory::new();
     let mut state = CPUState::new(memory);
     state.reset();
-    let mut instruction_set = CPU::new(state);
-    instruction_set.execute(1000);
+    let mut cpu = CPU::new(state);
+    cpu.execute(1000);
 }
