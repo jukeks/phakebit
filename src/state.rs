@@ -185,6 +185,10 @@ impl CPUState {
         }
     }
 
+    pub fn get_v(&self) -> u8 {
+        self.status & 0b0100_0000
+    }
+
     pub fn get_n(&self) -> u8 {
         self.status & 0b1000_0000
     }

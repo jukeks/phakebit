@@ -102,8 +102,22 @@ impl CPU {
                 Operation::BNE => self.bne(instruction.mode),
                 Operation::PLA => self.pla(),
                 Operation::PLP => self.plp(),
-
-                _ => panic!("Unknown instruction: {:02X}", instruction.opcode),
+                Operation::AND => self.and(instruction.mode),
+                Operation::EOR => self.eor(instruction.mode),
+                Operation::LSR => self.lsr(instruction.mode),
+                Operation::ROR => self.ror(instruction.mode),
+                Operation::BMI => self.bmi(instruction.mode),
+                Operation::BVS => self.bvs(instruction.mode),
+                Operation::BVC => self.bvc(instruction.mode),
+                Operation::RTI => self.rti(),
+                Operation::NOP => self.nop(),
+                Operation::BEQ => self.bne(instruction.mode),
+                Operation::CPX => self.cmp(instruction.mode),
+                Operation::CPY => self.cmp(instruction.mode),
+                Operation::INC => self.inc(instruction.mode),
+                Operation::DEC => self.dec(instruction.mode),
+                Operation::TSX => self.txs(),
+                Operation::BIT => self.bit(instruction.mode),
             }
 
             let t = Trace::new(
@@ -343,6 +357,7 @@ impl CPU {
     fn sed(&mut self) {
         self.state.status |= 0b0000_1000;
         self.state.cycles += 1;
+        panic!("Decimal mode not implemented");
     }
 
     fn sbc(&mut self, mode: AddressingMode) {
@@ -405,6 +420,121 @@ impl CPU {
         self.state.status = self.state.pop_byte();
         self.state.cycles += 1;
     }
+
+    fn and(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
+        let a = self.state.get_a() & operand;
+        self.state.set_a(a);
+        self.state.set_z(a);
+        self.state.set_n(a);
+        self.state.cycles += 1;
+    }
+
+    fn eor(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
+        let a = self.state.get_a() ^ operand;
+        self.state.set_a(a);
+        self.state.set_z(a);
+        self.state.set_n(a);
+        self.state.cycles += 1;
+    }
+
+    fn lsr(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        let value = self.state.read_byte(address);
+        let c = value & 0b0000_0001;
+        let result = value >> 1;
+        self.state.write_byte(address, result);
+        self.state.set_c(c);
+        self.state.set_z(result);
+        self.state.set_n(result);
+        self.state.cycles += 1;
+    }
+
+    fn ror(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        let value = self.state.read_byte(address);
+        let c = value & 0b0000_0001;
+        let result = (value >> 1) | (self.state.get_c() << 7);
+        self.state.write_byte(address, result);
+        self.state.set_c(c);
+        self.state.set_z(result);
+        self.state.set_n(result);
+        self.state.cycles += 1;
+    }
+
+    fn bmi(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        if self.state.get_n() == 1 {
+            self.state
+                .set_pc(address);
+        }
+    }
+
+    fn bvs(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        if self.state.get_v() == 1 {
+            self.state
+                .set_pc(address);
+        }
+    }
+
+    fn bvc(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        if self.state.get_v() == 0 {
+            self.state
+                .set_pc(address);
+        }
+    }
+
+    fn rti(&mut self) {
+        self.state.status = self.state.pop_byte();
+        let address = self.state.pop_word();
+        self.state.set_pc(address);
+        self.state.increment_cycles(1);
+    }
+
+    fn nop(&mut self) {
+        self.state.cycles += 1;
+    }
+
+    fn inc(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        let value = self.state.read_byte(address);
+        let result = value.wrapping_add(1);
+        self.state.write_byte(address, result);
+        self.state.set_z(result);
+        self.state.set_n(result);
+        self.state.cycles += 1;
+    }
+
+    fn dec(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        let value = self.state.read_byte(address);
+        let result = value.wrapping_sub(1);
+        self.state.write_byte(address, result);
+        self.state.set_z(result);
+        self.state.set_n(result);
+        self.state.cycles += 1;
+    }
+
+    fn tsx(&mut self) {
+        self.state.x = self.state.sp;
+        self.state.set_z(self.state.x);
+        self.state.set_n(self.state.x);
+        self.state.cycles += 1;
+    }
+
+    fn bit(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
+        let a = self.state.get_a();
+        let result = a & operand;
+        self.state.set_z(result);
+        self.state.set_n(operand);
+        self.state.set_v((operand & 0b0100_0000) != 0);
+        self.state.cycles += 1;
+    }
+
 }
 
 #[cfg(test)]
