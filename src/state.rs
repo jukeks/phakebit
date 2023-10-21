@@ -30,25 +30,40 @@ impl CPUState {
         }
     }
 
+    pub fn print_state(&self) {
+        let n_flag = (self.status >> 7) & 1;
+        let v_flag = (self.status >> 6) & 1;
+        let d_flag = (self.status >> 3) & 1;
+        let i_flag = (self.status >> 2) & 1;
+        let z_flag = (self.status >> 1) & 1;
+        let c_flag = self.status & 1;
+
+        print!("|{:02X} {:02X} {:02X} {:02X}|{}{}{}{}{}{}|",
+            self.a,  self.x, self.y,  self.sp, n_flag, v_flag, d_flag, i_flag, z_flag, c_flag
+        );
+    }
+
     pub fn reset(&mut self) {
         self.a = 0;
         self.x = 0;
         self.y = 0;
-        self.sp = 0xFD;
-        self.status = 0;
+        self.sp = 0xFF;
+        self.status = 0x36;
         self.cycles = 0;
 
-        let low = self.read_byte(RESET_VECTOR_ADDR) as u16;
-        let high = self.read_byte(RESET_VECTOR_ADDR + 1) as u16;
-        self.pc = (high << 8) | low;
+        self.pc = self.read_word(RESET_VECTOR_ADDR);
     }
 
     pub fn read_byte(&mut self, address: u16) -> u8 {
         self.cycles += 1;
-        self.memory.get(address)
+        let val = self.memory.get(address);
+
+        //println!("    read from address {:04X} value {:02X}", address, val);
+        val
     }
 
     pub fn write_byte(&mut self, address: u16, value: u8) {
+        //println!("    write to address {:04X} value {:02X}", address, value);
         self.cycles += 1;
         self.memory.set(address, value);
     }
@@ -80,7 +95,7 @@ impl CPUState {
 
     pub fn push_byte(&mut self, value: u8) {
         self.write_byte(STACK_PAGE + self.sp as u16, value);
-        self.sp -= 1;
+        self.sp = self.sp.wrapping_sub(1);
         self.cycles += 1;
     }
 
@@ -92,7 +107,7 @@ impl CPUState {
     }
 
     pub fn pop_byte(&mut self) -> u8 {
-        self.sp += 1;
+        self.sp = self.sp.wrapping_add(1);
         self.cycles += 1;
         self.read_byte(0x100 + self.sp as u16)
     }
@@ -216,6 +231,17 @@ mod tests {
         cpu.write_word(0x001, 0x1234);
 
         let value = cpu.read_word(0x0001);
+        assert_eq!(value, 0x1234);
+    }
+
+    #[test]
+    fn test_push_word() {
+        let memory = super::Memory::new();
+        let mut cpu = super::CPUState::new(memory);
+        cpu.reset();
+        cpu.push_word(0x1234);
+
+        let value = cpu.pop_word();
         assert_eq!(value, 0x1234);
     }
 }
