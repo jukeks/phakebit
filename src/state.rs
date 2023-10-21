@@ -206,8 +206,8 @@ mod tests {
         assert_eq!(cpu.x, 0);
         assert_eq!(cpu.y, 0);
         assert_eq!(cpu.pc, 0x0000);
-        assert_eq!(cpu.sp, 0xFD);
-        assert_eq!(cpu.status, 0);
+        assert_eq!(cpu.sp, 0xFF);
+        assert_eq!(cpu.status, 0x36);
     }
 
     #[test]

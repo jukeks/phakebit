@@ -338,6 +338,12 @@ fn opcode_to_instruction(opcode: u8) -> Instruction {
             mode: AddressingMode::ZPG,
             cycles: 3,
         },
+        0x85 => Instruction {
+            opcode: 0x85,
+            name: Operation::STA,
+            mode: AddressingMode::ZPG,
+            cycles: 3,
+        },
         0x86 => Instruction {
             opcode: 0x86,
             name: Operation::STX,
