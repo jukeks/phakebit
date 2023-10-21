@@ -1,5 +1,5 @@
-use crate::state::CPUState;
 use crate::instrumentation::Trace;
+use crate::state::CPUState;
 
 pub struct CPU {
     state: CPUState,
@@ -78,7 +78,8 @@ impl CPU {
                 self.state.status,
                 opcode,
                 operand,
-                (self.state.cycles - current_cycles) as u8,);
+                (self.state.cycles - current_cycles) as u8,
+            );
             t.print();
         }
     }
@@ -99,7 +100,8 @@ impl CPU {
         let operand = unsigned_operand as i8;
         if self.state.get_n() == 0 {
             let pc = self.state.pc;
-            self.state.set_pc(self.state.pc.wrapping_add(operand as u16));
+            self.state
+                .set_pc(self.state.pc.wrapping_add(operand as u16));
             //println!("    jumping from 0x{:X} to 0x{:X}", pc, self.state.pc);
             self.state.increment_cycles(1);
         }
@@ -192,9 +194,9 @@ impl CPU {
     }
 
     fn rts_impl(&mut self) -> Option<u16> {
-        let operand = self.state.pop_word();
+        let address = self.state.pop_word();
         //println!("    return to 0x{:X}", operand);
-        self.state.set_pc(operand);
+        self.state.set_pc(address);
         self.state.increment_cycles(1);
         None
     }
@@ -207,7 +209,8 @@ impl CPU {
         self.state.set_c((sum > 0xFF) as u8);
         let result = (sum & 0xFF) as u8;
         self.state.set_a(result);
-        self.state.set_v(((a ^ result) & (operand ^ result) & 0x80) != 0);
+        self.state
+            .set_v(((a ^ result) & (operand ^ result) & 0x80) != 0);
         self.state.set_z(result);
         self.state.set_n(result);
         self.state.cycles += 1;
@@ -223,7 +226,8 @@ impl CPU {
         self.state.set_c((sum > 0xFF) as u8);
         let result = (sum & 0xFF) as u8;
         self.state.set_a(result);
-        self.state.set_v(((a ^ result) & (value ^ result) & 0x80) != 0);
+        self.state
+            .set_v(((a ^ result) & (value ^ result) & 0x80) != 0);
         self.state.set_z(result);
         self.state.set_n(result);
         self.state.cycles += 1;
@@ -240,7 +244,8 @@ impl CPU {
         self.state.set_c((sum > 0xFF) as u8);
         let result = (sum & 0xFF) as u8;
         self.state.set_a(result);
-        self.state.set_v(((a ^ result) & (value ^ result) & 0x80) != 0);
+        self.state
+            .set_v(((a ^ result) & (value ^ result) & 0x80) != 0);
         self.state.set_z(result);
         self.state.set_n(result);
         self.state.cycles += 1;
@@ -253,7 +258,7 @@ impl CPU {
         self.state.set_z(self.state.a);
         self.state.set_n(self.state.a);
         self.state.cycles += 1;
-        Some(operand as u16)
+        None
     }
 
     fn and_xind(&mut self) -> Option<u16> {
@@ -271,13 +276,13 @@ impl CPU {
         let operand = self.state.fetch_word();
         let value = self.state.read_byte(operand);
         let old_carry = self.state.get_c() as u8;
-    
+
         // Shift value left and bring in the old carry to bit 0
         let result = (value << 1) | old_carry;
 
         // New carry is the old bit 7
         let new_carry = (value & 0b1000_0000) >> 7;
-    
+
         self.state.write_byte(operand, result);
         self.state.set_z(result);
         self.state.set_n(result);
@@ -343,7 +348,8 @@ impl CPU {
         let unsigned_operand = self.state.fetch_byte();
         let operand = unsigned_operand as i8;
         if self.state.get_c() == 0 {
-            self.state.set_pc(self.state.pc.wrapping_add(operand as u16));
+            self.state
+                .set_pc(self.state.pc.wrapping_add(operand as u16));
             self.state.increment_cycles(1);
         }
         Some(unsigned_operand as u16)
@@ -464,7 +470,8 @@ impl CPU {
         let operand = unsigned_operand as i8;
         if self.state.get_c() == 1 {
             let pc = self.state.pc;
-            self.state.set_pc(self.state.pc.wrapping_add(operand as u16));
+            self.state
+                .set_pc(self.state.pc.wrapping_add(operand as u16));
             //println!("    jumping from 0x{:X} to 0x{:X}", pc, self.state.pc);
             self.state.increment_cycles(1);
         }
@@ -515,7 +522,8 @@ impl CPU {
         let operand = unsigned_operand as i8;
         if self.state.get_z() == 0 {
             let pc = self.state.pc;
-            self.state.set_pc(self.state.pc.wrapping_add(operand as u16));
+            self.state
+                .set_pc(self.state.pc.wrapping_add(operand as u16));
             //println!("    jumping from 0x{:X} to 0x{:X}", pc, self.state.pc);
             self.state.increment_cycles(1);
         }
@@ -526,7 +534,7 @@ impl CPU {
         let operand = self.state.fetch_byte();
         let value = self.state.get_a();
         let carry = self.state.get_c();
-        
+
         // Perform the subtraction with inverted carry
         let result = value.wrapping_sub(operand).wrapping_sub(1 - carry);
 
@@ -545,7 +553,7 @@ impl CPU {
         let value = self.state.read_byte(operand);
         let a = self.state.get_a();
         let carry = self.state.get_c();
-        
+
         // Perform the subtraction with inverted carry
         let result = a.wrapping_sub(value).wrapping_sub(1 - carry);
 
@@ -614,15 +622,15 @@ mod tests {
         let argument_addr: u16 = 0xDEAD;
         // 2008-05-01, should be thursday
         memory.set(argument_addr, 0x07);
-        memory.set(argument_addr+1, 0xD8);
-        memory.set(argument_addr+2, 0x05);
-        memory.set(argument_addr+3, 0x01);
+        memory.set(argument_addr + 1, 0xD8);
+        memory.set(argument_addr + 2, 0x05);
+        memory.set(argument_addr + 3, 0x01);
 
         let mut cpu_state = super::CPUState::new(memory);
         cpu_state.reset();
-        
+
         cpu_state.x = 0xAD;
-        cpu_state.y = 0xDE; 
+        cpu_state.y = 0xDE;
 
         let mut cpu = super::CPU::new(cpu_state);
         cpu.execute(10000);
