@@ -1,4 +1,5 @@
 use crate::memory::Memory;
+use crate::instruction::AddressingMode;
 
 pub const ZERO_PAGE: u16 = 0x000;
 pub const STACK_PAGE: u16 = 0x100;
@@ -194,6 +195,103 @@ impl CPUState {
 
     pub fn get_z(&self) -> u8 {
         self.status & 0b0000_0010
+    }
+
+
+    pub fn resolve_address(&mut self, mode: AddressingMode) -> u16 {
+        match mode {
+            AddressingMode::ZPG => self.fetch_byte() as u16,
+            AddressingMode::ZPGX => {
+                let operand = self.fetch_byte();
+                let address = operand.wrapping_add(self.x);
+                address as u16
+            }
+            AddressingMode::ZPGY => {
+                let operand = self.fetch_byte();
+                let address = operand.wrapping_add(self.y);
+                address as u16
+            }
+            AddressingMode::ABS => self.fetch_word(),
+            AddressingMode::ABSX => {
+                let operand = self.fetch_word();
+                let address = operand.wrapping_add(self.x as u16);
+                address
+            }
+            AddressingMode::ABSY => {
+                let operand = self.fetch_word();
+                let address = operand.wrapping_add(self.y as u16);
+                address
+            }
+            AddressingMode::XIND => {
+                let operand = self.fetch_byte();
+                let address = self.read_word(operand as u16 + self.x as u16);
+                self.read_word(address)
+            }
+            AddressingMode::INDY => {
+                let operand = self.fetch_byte();
+                let address = self.read_word(operand as u16) + self.y as u16;
+                self.read_word(address)
+            }
+            AddressingMode::REL => {
+                let unsigned_operand = self.fetch_byte();
+                let operand = unsigned_operand as i8;
+                self.pc.wrapping_add(operand as u16)
+            }
+            _ => panic!("Unsupported addressing mode: {:?}", mode),
+        }
+    }
+
+    pub fn fetch_operand(&mut self, mode: AddressingMode) -> u8 {
+        match mode {
+            AddressingMode::IMM => self.fetch_byte(),
+            AddressingMode::ZPG => {
+                let operand = self.fetch_byte();
+                self.read_byte(operand as u16)
+            }
+            AddressingMode::ZPGX => {
+                let operand = self.fetch_byte();
+                let address = operand.wrapping_add(self.x);
+                self.read_byte(address as u16)
+            }
+            AddressingMode::ZPGY => {
+                let operand = self.fetch_byte();
+                let address = operand.wrapping_add(self.y);
+                self.read_byte(address as u16)
+            }
+            AddressingMode::ABS => {
+                let operand = self.fetch_word();
+                self.read_byte(operand)
+            }
+            AddressingMode::ABSX => {
+                let operand = self.fetch_word();
+                let address = operand.wrapping_add(self.x as u16);
+                self.read_byte(address)
+            }
+            AddressingMode::ABSY => {
+                let operand = self.fetch_word();
+                let address = operand.wrapping_add(self.y as u16);
+                self.read_byte(address)
+            }
+            AddressingMode::IND => {
+                let operand = self.fetch_word();
+                self.read_byte(operand)
+            }
+            AddressingMode::XIND => {
+                let operand = self.fetch_byte();
+                let address = self.read_word(operand as u16 + self.x as u16);
+                self.read_byte(address)
+            }
+            AddressingMode::INDY => {
+                let operand = self.fetch_byte();
+                let address = self.read_word(operand as u16) + self.y as u16;
+                self.read_byte(address)
+            }
+            AddressingMode::ACC => self.get_a(),
+            AddressingMode::REL => {
+                self.fetch_byte()
+            },
+            _ => panic!("Unsupported addressing mode: {:?}", mode),
+        }
     }
 }
 

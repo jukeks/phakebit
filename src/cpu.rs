@@ -1,3 +1,6 @@
+use crate::instruction;
+use crate::instruction::AddressingMode;
+use crate::instruction::Operation;
 use crate::instrumentation::Trace;
 use crate::state::CPUState;
 
@@ -10,64 +13,98 @@ impl CPU {
         CPU { state: state }
     }
 
+    fn read_operand(&mut self, mode: AddressingMode) -> Option<u16> {
+        match mode {
+            AddressingMode::REL => {
+                Some(self.state.read_byte(self.state.pc) as u16)
+            }
+            AddressingMode::ACC => None,
+            AddressingMode::IMPL => None,
+            AddressingMode::IMM => {
+                Some(self.state.read_byte(self.state.pc) as u16)
+            }
+            AddressingMode::ZPG => {
+                Some(self.state.read_byte(self.state.pc) as u16)
+            }
+            AddressingMode::ZPGX => {
+                Some(self.state.read_byte(self.state.pc) as u16)
+            }
+            AddressingMode::ZPGY => {
+                Some(self.state.read_byte(self.state.pc) as u16)
+            }
+            AddressingMode::ABS => {
+                Some(self.state.read_word(self.state.pc))
+            }
+            AddressingMode::ABSX => {
+                Some(self.state.read_word(self.state.pc))
+            }
+            AddressingMode::ABSY => {
+                Some(self.state.read_word(self.state.pc))
+            }
+            AddressingMode::IND => {
+                Some(self.state.read_byte(self.state.pc) as u16)
+            }
+            AddressingMode::XIND => {
+                Some(self.state.read_byte(self.state.pc) as u16)
+            }
+            AddressingMode::INDY => {
+                Some(self.state.read_byte(self.state.pc) as u16)
+            }
+        }
+    }
+
     pub fn execute(&mut self, cycles: u64) {
         while self.state.cycles < cycles || cycles == 0 {
             let pc = self.state.pc;
             let current_cycles = self.state.cycles;
             let opcode = self.state.fetch_byte();
+            let instruction = instruction::opcode_to_instruction(opcode);
+            let operand = self.read_operand(instruction.mode);
 
-            let operand = match opcode {
-                0x00 => break,
-                0x01 => self.ora_xind(),
-                0x05 => self.ora_zpg(),
-                0x06 => self.asl_zpg(),
-                0x08 => self.php_impl(),
-                0x09 => self.ora_imm(),
-                0x10 => self.bpl_rel(),
-                0x18 => self.clc_impl(),
-                0x20 => self.jsr_abs(),
-                0x21 => self.and_xind(),
-                0x2E => self.rol_abs(),
-                0x38 => self.sec_impl(),
-                0x48 => self.pha_impl(),
-                0x4C => self.jmp_abs(),
-                0x58 => self.cli_impl(),
-                0x5D => self.eor_absx(),
-                0x60 => self.rts_impl(),
-                0x69 => self.adc_imm(),
-                0x6D => self.adc_abs(),
-                0x7D => self.adc_absx(),
-                0x68 => self.pla_impl(),
-                0x84 => self.sty_zpg(),
-                0x85 => self.sta_zpg(),
-                0x86 => self.stx_zpg(),
-                0x88 => self.dey_impl(),
-                0x8A => self.txa_impl(),
-                0x8C => self.sty_abs(),
-                0x8D => self.sta_abs(),
-                0x8E => self.stx_abs(),
-                0x90 => self.bcc_impl(),
-                0x99 => self.sta_absy(),
-                0xA0 => self.ldy_imm(),
-                0xA2 => self.ldx_imm(),
-                0xA4 => self.ldy_zpg(),
-                0xA6 => self.ldx_zpg(),
-                0xA8 => self.tay_impl(),
-                0xA9 => self.lda_imm(),
-                0xAA => self.tax_impl(),
-                0xAC => self.ldy_abs(),
-                0xAD => self.lda_abs(),
-                0xAE => self.ldx_abs(),
-                0xB0 => self.bcs_rel(),
-                0xB1 => self.lda_yind(),
-                0xCA => self.dex_impl(),
-                0xC9 => self.cmp_imm(),
-                0xD0 => self.bne_rel(),
-                0xE9 => self.sbc_imm(),
-                0xED => self.sbc_abs(),
-                0xEE => self.inc_abs(),
-                _ => panic!("Unknown opcode: {:X}", opcode),
-            };
+            match instruction.name {
+                Operation::BRK => break,
+                Operation::ADC => self.adc(instruction.mode),
+                Operation::LDX => self.ldx(instruction.mode),
+                Operation::LDA => self.lda(instruction.mode),
+                Operation::LDY => self.ldy(instruction.mode),
+                Operation::ASL => self.asl(instruction.mode),
+                Operation::ORA => self.ora(instruction.mode),
+                Operation::STA => self.sta(instruction.mode),
+                Operation::STX => self.stx(instruction.mode),
+                Operation::STY => self.sty(instruction.mode),
+                Operation::JMP => self.jmp(instruction.mode),
+                Operation::DEY => self.dey(),
+                Operation::DEX => self.dex(),
+                Operation::INY => self.iny(),
+                Operation::INX => self.inx(),
+                Operation::BPL => self.bpl(instruction.mode),
+                Operation::PHA => self.pha(),
+                Operation::PHP => self.php(),
+                Operation::CMP => self.cmp(instruction.mode),
+                Operation::BCS => self.bcs(instruction.mode),
+                Operation::BCC => self.bcc(instruction.mode),
+                Operation::TXA => self.txa(),
+                Operation::TYA => self.tya(),
+                Operation::TXS => self.txs(),
+                Operation::TAY => self.tay(),
+                Operation::TAX => self.tax(),
+                Operation::CLC => self.clc(),
+                Operation::SEC => self.sec(),
+                Operation::CLI => self.cli(),
+                Operation::SEI => self.sei(),
+                Operation::CLV => self.clv(),
+                Operation::CLD => self.cld(),
+                Operation::SED => self.sed(),
+                Operation::SBC => self.sbc(instruction.mode),
+                Operation::JSR => self.jsr(instruction.mode),
+                Operation::RTS => self.rts(),
+                Operation::ROL => self.rol(instruction.mode),
+                Operation::BNE => self.bne(instruction.mode),
+                Operation::PLA => self.pla(),
+                Operation::PLP => self.plp(),
+
+                _ => panic!("Unknown instruction: {:02X}", instruction.opcode),
+            }
 
             let t = Trace::new(
                 pc,
@@ -78,131 +115,15 @@ impl CPU {
                 self.state.status,
                 opcode,
                 operand,
-                (self.state.cycles - current_cycles) as u8,
+                0,
             );
             t.print();
         }
     }
 
-    fn brk_impl(&mut self) -> Option<u16> {
-        None
-    }
 
-    fn clc_impl(&mut self) -> Option<u16> {
-        self.state.status &= 0b1111_1110;
-        self.state.cycles += 1;
-        None
-    }
-
-    fn bpl_rel(&mut self) -> Option<u16> {
-        let unsigned_operand = self.state.fetch_byte();
-        //  BPL uses relative addressing so it can branch to an address within -128 to +127 bytes
-        let operand = unsigned_operand as i8;
-        if self.state.get_n() == 0 {
-            let pc = self.state.pc;
-            self.state
-                .set_pc(self.state.pc.wrapping_add(operand as u16));
-            //println!("    jumping from 0x{:X} to 0x{:X}", pc, self.state.pc);
-            self.state.increment_cycles(1);
-        }
-        Some(unsigned_operand as u16)
-    }
-
-    fn ora_xind(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        let address = self.state.read_x() as u16 + operand as u16;
-        let value = self.state.read_byte(address);
-        let a = self.state.get_a() | value;
-        self.state.set_a(a);
-        self.state.set_z(a);
-        self.state.set_n(a);
-        Some(operand as u16)
-    }
-
-    fn ora_zpg(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        let value = self.state.read_byte(operand as u16);
-        let a = self.state.get_a() | value;
-        self.state.set_a(a);
-        self.state.set_z(a);
-        self.state.set_n(a);
-        Some(operand as u16)
-    }
-
-    fn asl_zpg(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        let value = self.state.read_byte(operand as u16);
-
-        let c = (value & 0b1000_0000) >> 7;
-        let result = value << 1;
-        self.state.write_byte(operand as u16, result);
-        self.state.set_c(c);
-        self.state.set_z(result);
-        self.state.set_n(result);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn jmp_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        self.state.set_pc(operand);
-        self.state.increment_cycles(1);
-        Some(operand as u16)
-    }
-
-    fn eor_absx(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let address = operand + self.state.x as u16;
-        let value = self.state.read_byte(address);
-        let a = self.state.get_a() ^ value;
-        self.state.set_a(a);
-        self.state.set_z(a);
-        self.state.set_n(a);
-        Some(operand as u16)
-    }
-
-    fn php_impl(&mut self) -> Option<u16> {
-        // set break and bit 5
-        let status = self.state.status | 0b0011_0000;
-        self.state.push_byte(status);
-        self.state.cycles += 1;
-        None
-    }
-
-    fn ora_imm(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        self.state.a |= operand;
-        self.state.set_z(self.state.a);
-        self.state.set_n(self.state.a);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn nop(&mut self) -> Option<u16> {
-        self.state.cycles += 1;
-        None
-    }
-
-    fn jsr_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        //println!("    jumping to 0x{:X}", operand);
-        let pc = self.state.pc;
-        self.state.push_word(pc);
-        self.state.set_pc(operand);
-        self.state.increment_cycles(1);
-        Some(operand as u16)
-    }
-
-    fn rts_impl(&mut self) -> Option<u16> {
-        let address = self.state.pop_word();
-        //println!("    return to 0x{:X}", operand);
-        self.state.set_pc(address);
-        self.state.increment_cycles(1);
-        None
-    }
-
-    fn adc_imm(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
+    fn adc(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
         let a = self.state.get_a();
         let carry = self.state.get_c() as u8;
         let sum = a as u16 + operand as u16 + carry as u16;
@@ -214,368 +135,275 @@ impl CPU {
         self.state.set_z(result);
         self.state.set_n(result);
         self.state.cycles += 1;
-        Some(operand as u16)
     }
 
-    fn adc_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let value = self.state.read_byte(operand);
-        let a = self.state.get_a();
-        let carry = self.state.get_c() as u8;
-        let sum = a as u16 + value as u16 + carry as u16;
-        self.state.set_c((sum > 0xFF) as u8);
-        let result = (sum & 0xFF) as u8;
-        self.state.set_a(result);
-        self.state
-            .set_v(((a ^ result) & (value ^ result) & 0x80) != 0);
-        self.state.set_z(result);
-        self.state.set_n(result);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn adc_absx(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let address = operand + self.state.x as u16;
-        let value = self.state.read_byte(address);
-        let a = self.state.get_a();
-        let carry = self.state.get_c() as u8;
-        let sum = a as u16 + value as u16 + carry as u16;
-        self.state.set_c((sum > 0xFF) as u8);
-        let result = (sum & 0xFF) as u8;
-        self.state.set_a(result);
-        self.state
-            .set_v(((a ^ result) & (value ^ result) & 0x80) != 0);
-        self.state.set_z(result);
-        self.state.set_n(result);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn pla_impl(&mut self) -> Option<u16> {
-        let operand = self.state.pop_byte();
-        self.state.a = operand;
-        self.state.set_z(self.state.a);
-        self.state.set_n(self.state.a);
-        self.state.cycles += 1;
-        None
-    }
-
-    fn and_xind(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        let address = self.state.read_x() as u16 + operand as u16;
-        let value = self.state.read_byte(address);
-        let a = self.state.get_a() & value;
-        self.state.set_a(a);
-        self.state.set_z(a);
-        self.state.set_n(a);
-        Some(operand as u16)
-    }
-
-    fn rol_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let value = self.state.read_byte(operand);
-        let old_carry = self.state.get_c() as u8;
-
-        // Shift value left and bring in the old carry to bit 0
-        let result = (value << 1) | old_carry;
-
-        // New carry is the old bit 7
-        let new_carry = (value & 0b1000_0000) >> 7;
-
-        self.state.write_byte(operand, result);
-        self.state.set_z(result);
-        self.state.set_n(result);
-        self.state.set_c(new_carry);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn sec_impl(&mut self) -> Option<u16> {
-        self.state.status |= 0b0000_0001;
-        self.state.cycles += 1;
-        None
-    }
-
-    fn pha_impl(&mut self) -> Option<u16> {
-        self.state.push_byte(self.state.a);
-        self.state.cycles += 1;
-        None
-    }
-
-    fn sty_zpg(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        self.state.write_byte(operand as u16, self.state.y);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn txa_impl(&mut self) -> Option<u16> {
-        self.state.a = self.state.x;
-        self.state.set_z(self.state.a);
-        self.state.set_n(self.state.a);
-        self.state.cycles += 1;
-        None
-    }
-
-    fn dey_impl(&mut self) -> Option<u16> {
-        self.state.y = self.state.y.wrapping_sub(1);
-        self.state.set_z(self.state.y);
-        self.state.set_n(self.state.y);
-        None
-    }
-
-    fn stx_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        self.state.write_byte(operand, self.state.x);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn sta_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        self.state.write_byte(operand, self.state.a);
-        Some(operand as u16)
-    }
-
-    fn sty_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        self.state.write_byte(operand, self.state.y);
-        Some(operand as u16)
-    }
-
-    fn bcc_impl(&mut self) -> Option<u16> {
-        let unsigned_operand = self.state.fetch_byte();
-        let operand = unsigned_operand as i8;
-        if self.state.get_c() == 0 {
-            self.state
-                .set_pc(self.state.pc.wrapping_add(operand as u16));
-            self.state.increment_cycles(1);
-        }
-        Some(unsigned_operand as u16)
-    }
-
-    fn cli_impl(&mut self) -> Option<u16> {
-        self.state.status &= 0b1111_1011;
-        self.state.cycles += 1;
-        None
-    }
-
-    fn sta_zpg(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        self.state.write_byte(operand as u16, self.state.a);
-        Some(operand as u16)
-    }
-
-    fn stx_zpg(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        self.state.write_byte(operand as u16, self.state.x);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn sta_absy(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let address = operand + self.state.y as u16;
-        self.state.write_byte(address, self.state.a);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn ldy_imm(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        self.state.y = operand;
-        self.state.set_z(self.state.y);
-        self.state.set_n(self.state.y);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn ldx_imm(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
+    fn ldx(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
         self.state.x = operand;
         self.state.set_z(self.state.x);
         self.state.set_n(self.state.x);
         self.state.cycles += 1;
-        Some(operand as u16)
     }
 
-    fn ldx_zpg(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        let value = self.state.read_byte(operand as u16);
-        self.state.x = value;
-        self.state.set_z(self.state.x);
-        self.state.set_n(self.state.x);
-        self.state.cycles += 1;
-        Some(operand as u16)
-    }
-
-    fn ldy_zpg(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        let value = self.state.read_byte(operand as u16);
-        self.state.y = value;
+    fn ldy(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
+        self.state.y = operand;
         self.state.set_z(self.state.y);
         self.state.set_n(self.state.y);
         self.state.cycles += 1;
-        Some(operand as u16)
     }
 
-    fn tax_impl(&mut self) -> Option<u16> {
-        self.state.x = self.state.a;
-        self.state.set_z(self.state.x);
-        self.state.set_n(self.state.x);
-        self.state.cycles += 1;
-        None
-    }
-
-    fn tay_impl(&mut self) -> Option<u16> {
-        self.state.y = self.state.a;
-        self.state.set_z(self.state.y);
-        self.state.set_n(self.state.y);
-        self.state.cycles += 1;
-        None
-    }
-
-    fn lda_imm(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
+    fn lda(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
         self.state.a = operand;
         self.state.set_z(self.state.a);
         self.state.set_n(self.state.a);
-        Some(operand as u16)
-    }
-
-    fn lda_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let value = self.state.read_byte(operand);
-        self.state.a = value;
-        self.state.set_z(self.state.a);
-        self.state.set_n(self.state.a);
         self.state.cycles += 1;
-        Some(operand as u16)
     }
 
-    fn ldx_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let value = self.state.read_byte(operand);
-        self.state.x = value;
-        self.state.set_z(self.state.x);
-        self.state.set_n(self.state.x);
+    fn ora(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
+        let a = self.state.get_a() | operand;
+        self.state.set_a(a);
+        self.state.set_z(a);
+        self.state.set_n(a);
         self.state.cycles += 1;
-        Some(operand as u16)
     }
 
-    fn bcs_rel(&mut self) -> Option<u16> {
-        let unsigned_operand = self.state.fetch_byte();
-        //  BCS uses relative addressing so it can branch to an address within -128 to +127 bytes
-        let operand = unsigned_operand as i8;
-        if self.state.get_c() == 1 {
-            let pc = self.state.pc;
-            self.state
-                .set_pc(self.state.pc.wrapping_add(operand as u16));
-            //println!("    jumping from 0x{:X} to 0x{:X}", pc, self.state.pc);
-            self.state.increment_cycles(1);
-        }
-        Some(unsigned_operand as u16)
+    fn asl(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        let value = self.state.read_byte(address);
+        let c = (value & 0b1000_0000) >> 7;
+        let result = value << 1;
+        self.state.write_byte(address, result);
+        self.state.set_c(c);
+        self.state.set_z(result);
+        self.state.set_n(result);
+        self.state.cycles += 1;
     }
 
-    fn ldy_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let value = self.state.read_byte(operand);
-        self.state.y = value;
+    fn sta(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        self.state.write_byte(address, self.state.a);
+        self.state.cycles += 1;
+    }
+
+    fn stx(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        self.state.write_byte(address, self.state.x);
+        self.state.cycles += 1;
+    }
+
+    fn sty(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        self.state.write_byte(address, self.state.y);
+        self.state.cycles += 1;
+    }
+
+    fn jmp(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        self.state.set_pc(address);
+        self.state.increment_cycles(1);
+    }
+
+    fn dey(&mut self) {
+        self.state.y = self.state.y.wrapping_sub(1);
         self.state.set_z(self.state.y);
         self.state.set_n(self.state.y);
-        Some(operand as u16)
     }
 
-    fn lda_yind(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        let address = self.state.read_word(operand as u16) + self.state.y as u16;
-        let value = self.state.read_byte(address);
-        self.state.a = value;
-        self.state.set_z(self.state.a);
-        self.state.set_n(self.state.a);
-        Some(operand as u16)
-    }
-
-    fn dex_impl(&mut self) -> Option<u16> {
+    fn dex(&mut self) {
         self.state.x = self.state.x.wrapping_sub(1);
         self.state.set_z(self.state.x);
         self.state.set_n(self.state.x);
-        self.state.cycles += 1;
-        None
     }
 
-    fn cmp_imm(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
+    fn iny(&mut self) {
+        self.state.y = self.state.y.wrapping_add(1);
+        self.state.set_z(self.state.y);
+        self.state.set_n(self.state.y);
+    }
+
+    fn inx(&mut self) {
+        self.state.x = self.state.x.wrapping_add(1);
+        self.state.set_z(self.state.x);
+        self.state.set_n(self.state.x);
+    }
+
+    fn bpl(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        if self.state.get_n() == 0 {
+            self.state
+                .set_pc(address);
+            self.state.increment_cycles(1);
+        }
+    }
+
+    fn pha(&mut self) {
+        self.state.push_byte(self.state.a);
+        self.state.cycles += 1;
+    }
+
+    fn php(&mut self) {
+        // set break and bit 5
+        let status = self.state.status | 0b0011_0000;
+        self.state.push_byte(status);
+        self.state.cycles += 1;
+    }
+
+    fn cmp(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
         let a = self.state.get_a();
         let result = a.wrapping_sub(operand);
         self.state.set_c(if a >= operand { 1 } else { 0 });
         self.state.set_z(result);
         self.state.set_n(result);
         self.state.cycles += 1;
-        Some(operand as u16)
     }
 
-    fn bne_rel(&mut self) -> Option<u16> {
-        let unsigned_operand = self.state.fetch_byte();
-        //  BNE uses relative addressing so it can branch to an address within -128 to +127 bytes
-        let operand = unsigned_operand as i8;
-        if self.state.get_z() == 0 {
-            let pc = self.state.pc;
+    fn bcs(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        if self.state.get_c() == 1 {
             self.state
-                .set_pc(self.state.pc.wrapping_add(operand as u16));
-            //println!("    jumping from 0x{:X} to 0x{:X}", pc, self.state.pc);
-            self.state.increment_cycles(1);
+                .set_pc(address);
         }
-        Some(unsigned_operand as u16)
     }
 
-    fn sbc_imm(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_byte();
-        let value = self.state.get_a();
-        let carry = self.state.get_c();
+    fn bcc(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        if self.state.get_c() == 0 {
+            self.state
+                .set_pc(address);
+        }
+    }
 
-        // Perform the subtraction with inverted carry
-        let result = value.wrapping_sub(operand).wrapping_sub(1 - carry);
-
-        self.state.set_a(result);
-        self.state.set_c(if value >= operand { 1 } else { 0 });
-        self.state.set_z(result);
-        self.state.set_n(result);
-        let overflow = ((value ^ result) & (operand ^ result) & 0x80) != 0;
-        self.state.set_v(overflow);
+    fn txa(&mut self) {
+        self.state.a = self.state.x;
+        self.state.set_z(self.state.a);
+        self.state.set_n(self.state.a);
         self.state.cycles += 1;
-        Some(operand as u16)
     }
 
-    fn sbc_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let value = self.state.read_byte(operand);
+    fn tya(&mut self) {
+        self.state.a = self.state.y;
+        self.state.set_z(self.state.a);
+        self.state.set_n(self.state.a);
+        self.state.cycles += 1;
+    }
+
+    fn txs(&mut self) {
+        self.state.sp = self.state.x;
+        self.state.cycles += 1;
+    }
+
+    fn tay(&mut self) {
+        self.state.y = self.state.a;
+        self.state.set_z(self.state.y);
+        self.state.set_n(self.state.y);
+        self.state.cycles += 1;
+    }
+
+    fn tax(&mut self) {
+        self.state.x = self.state.a;
+        self.state.set_z(self.state.x);
+        self.state.set_n(self.state.x);
+        self.state.cycles += 1;
+    }
+
+    fn clc(&mut self) {
+        self.state.status &= 0b1111_1110;
+        self.state.cycles += 1;
+    }
+
+    fn sec(&mut self) {
+        self.state.status |= 0b0000_0001;
+        self.state.cycles += 1;
+    }
+
+    fn cli(&mut self) {
+        self.state.status &= 0b1111_1101;
+        self.state.cycles += 1;
+    }
+
+    fn sei(&mut self) {
+        self.state.status |= 0b0000_0100;
+        self.state.cycles += 1;
+    }
+
+    fn clv(&mut self) {
+        self.state.status &= 0b1011_1111;
+        self.state.cycles += 1;
+    }
+
+    fn cld(&mut self) {
+        self.state.status &= 0b1111_1011;
+        self.state.cycles += 1;
+    }
+
+    fn sed(&mut self) {
+        self.state.status |= 0b0000_1000;
+        self.state.cycles += 1;
+    }
+
+    fn sbc(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
         let a = self.state.get_a();
-        let carry = self.state.get_c();
-
-        // Perform the subtraction with inverted carry
-        let result = a.wrapping_sub(value).wrapping_sub(1 - carry);
-
+        let carry = self.state.get_c() as u8;
+        let sum = a as u16 + (!operand) as u16 + carry as u16;
+        self.state.set_c((sum > 0xFF) as u8);
+        let result = (sum & 0xFF) as u8;
         self.state.set_a(result);
-        self.state.set_c(if a >= value { 1 } else { 0 });
+        self.state
+            .set_v(((a ^ result) & (!operand ^ result) & 0x80) != 0);
         self.state.set_z(result);
         self.state.set_n(result);
-        let overflow = ((a ^ result) & (value ^ result) & 0x80) != 0;
-        self.state.set_v(overflow);
         self.state.cycles += 1;
-        Some(operand as u16)
     }
 
-    fn inc_abs(&mut self) -> Option<u16> {
-        let operand = self.state.fetch_word();
-        let value = self.state.read_byte(operand);
-        let result = value.wrapping_add(1);
-        self.state.write_byte(operand, result);
+    fn jsr(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        let pc = self.state.pc;
+        self.state.push_word(pc);
+        self.state.set_pc(address);
+        self.state.increment_cycles(1);
+    }
+
+    fn rts(&mut self) {
+        let address = self.state.pop_word();
+        self.state.set_pc(address);
+        self.state.increment_cycles(1);
+    }
+
+    fn rol(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        let value = self.state.read_byte(address);
+        let c = (value & 0b1000_0000) >> 7;
+        let result = (value << 1) | self.state.get_c();
+        self.state.write_byte(address, result);
+        self.state.set_c(c);
         self.state.set_z(result);
         self.state.set_n(result);
         self.state.cycles += 1;
-        Some(operand as u16)
+    }
+
+    fn bne(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        if self.state.get_z() == 0 {
+            self.state
+                .set_pc(address);
+        }
+    }
+
+    fn pla(&mut self) {
+        self.state.a = self.state.pop_byte();
+        self.state.set_z(self.state.a);
+        self.state.set_n(self.state.a);
+        self.state.cycles += 1;
+    }
+
+    fn plp(&mut self) {
+        self.state.status = self.state.pop_byte();
+        self.state.cycles += 1;
     }
 }
 
