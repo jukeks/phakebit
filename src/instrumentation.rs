@@ -86,7 +86,6 @@ impl Trace {
     }
 }
 
-
 #[derive(Copy, Clone, Debug)]
 #[allow(dead_code)]
 enum AddressingMode {
@@ -111,7 +110,7 @@ enum AddressingMode {
     ZPGY,
 }
 
-#[derive(Copy, Clone,Debug)]
+#[derive(Copy, Clone, Debug)]
 #[allow(dead_code)]
 enum Operation {
     ADC,
@@ -196,8 +195,11 @@ fn format_operand(operand: u16, pc: u16, mode: AddressingMode) -> String {
         AddressingMode::INDY => format!("(${:02X}),Y", operand),
         AddressingMode::REL => {
             let signed_operand = operand as i8;
-            format!("${:04X}", pc.wrapping_add(signed_operand as u16).wrapping_add(2))
-        },
+            format!(
+                "${:04X}",
+                pc.wrapping_add(signed_operand as u16).wrapping_add(2)
+            )
+        }
         AddressingMode::ZPG => format!("${:02X}", operand),
         AddressingMode::ZPGX => format!("${:02X},X", operand),
         AddressingMode::ZPGY => format!("${:02X},Y", operand),
