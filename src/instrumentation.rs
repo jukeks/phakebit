@@ -197,6 +197,7 @@ fn format_operand(operand: u16, pc: u16, mode: AddressingMode) -> String {
             let signed_operand = operand as i8;
             format!(
                 "${:04X}",
+                // 2 comes from having read the opcode and operand bytes
                 pc.wrapping_add(signed_operand as u16).wrapping_add(2)
             )
         }
