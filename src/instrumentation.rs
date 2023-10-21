@@ -87,7 +87,8 @@ impl Trace {
 }
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
+#[allow(dead_code)]
 enum AddressingMode {
     ACC,
 
@@ -110,8 +111,8 @@ enum AddressingMode {
     ZPGY,
 }
 
-#[derive(Debug)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone,Debug)]
+#[allow(dead_code)]
 enum Operation {
     ADC,
     AND,
