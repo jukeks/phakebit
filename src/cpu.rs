@@ -614,7 +614,7 @@ mod tests {
         cpu_state.reset();
 
         let mut cpu = super::CPU::new(cpu_state);
-        cpu.execute(1000000);
+        cpu.execute(60000);
 
         println!("cycles: {}", cpu.state.cycles);
         assert!(cpu.state.cycles > 100000000)

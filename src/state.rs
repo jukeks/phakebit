@@ -226,8 +226,8 @@ impl CPUState {
                 address
             }
             AddressingMode::IND => {
-                let operand = self.fetch_word();
-                self.read_word(operand)
+                let indirect_address = self.fetch_word();
+                self.read_word(indirect_address)
             }
             AddressingMode::XIND => {
                 let zero_page_address = self.fetch_byte();
@@ -235,7 +235,6 @@ impl CPUState {
                 let effective_address = self.read_word(zero_page_offset);
                 effective_address
             }
-
             AddressingMode::INDY => {
                 let zero_page_address = self.fetch_byte();
                 let indirect_address = self.read_word(zero_page_address as u16);
