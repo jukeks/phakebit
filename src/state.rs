@@ -186,11 +186,11 @@ impl CPUState {
     }
 
     pub fn get_v(&self) -> u8 {
-        self.status & 0b0100_0000
+        (self.status & 0b0100_0000) >> 6
     }
 
     pub fn get_n(&self) -> u8 {
-        self.status & 0b1000_0000
+        (self.status & 0b1000_0000) >> 7
     }
 
     pub fn get_c(&self) -> u8 {
@@ -198,7 +198,7 @@ impl CPUState {
     }
 
     pub fn get_z(&self) -> u8 {
-        self.status & 0b0000_0010
+        (self.status & 0b0000_0010) >> 1
     }
 
     pub fn resolve_address(&mut self, mode: AddressingMode) -> u16 {
@@ -225,15 +225,22 @@ impl CPUState {
                 let address = operand.wrapping_add(self.y as u16);
                 address
             }
-            AddressingMode::XIND => {
-                let operand = self.fetch_byte();
-                let address = self.read_word(operand as u16 + self.x as u16);
-                self.read_word(address)
+            AddressingMode::IND => {
+                let operand = self.fetch_word();
+                self.read_word(operand)
             }
+            AddressingMode::XIND => {
+                let zero_page_address = self.fetch_byte();
+                let zero_page_offset = zero_page_address.wrapping_add(self.x) as u16;
+                let effective_address = self.read_word(zero_page_offset);
+                effective_address
+            }
+
             AddressingMode::INDY => {
-                let operand = self.fetch_byte();
-                let address = self.read_word(operand as u16) + self.y as u16;
-                self.read_word(address)
+                let zero_page_address = self.fetch_byte();
+                let indirect_address = self.read_word(zero_page_address as u16);
+                let effective_address = indirect_address.wrapping_add(self.y as u16);
+                effective_address
             }
             AddressingMode::REL => {
                 let unsigned_operand = self.fetch_byte();

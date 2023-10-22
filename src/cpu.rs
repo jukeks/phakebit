@@ -64,6 +64,7 @@ impl CPU {
                 Operation::TXA => self.txa(),
                 Operation::TYA => self.tya(),
                 Operation::TXS => self.txs(),
+                Operation::TSX => self.tsx(),
                 Operation::TAY => self.tay(),
                 Operation::TAX => self.tax(),
                 Operation::CLC => self.clc(),
@@ -89,12 +90,11 @@ impl CPU {
                 Operation::BVC => self.bvc(instruction.mode),
                 Operation::RTI => self.rti(),
                 Operation::NOP => self.nop(),
-                Operation::BEQ => self.bne(instruction.mode),
-                Operation::CPX => self.cmp(instruction.mode),
-                Operation::CPY => self.cmp(instruction.mode),
+                Operation::BEQ => self.beq(instruction.mode),
+                Operation::CPX => self.cpx(instruction.mode),
+                Operation::CPY => self.cpy(instruction.mode),
                 Operation::INC => self.inc(instruction.mode),
                 Operation::DEC => self.dec(instruction.mode),
-                Operation::TSX => self.tsx(),
                 Operation::BIT => self.bit(instruction.mode),
             }
 
@@ -324,7 +324,7 @@ impl CPU {
     }
 
     fn cld(&mut self) {
-        self.state.status &= 0b1111_1011;
+        self.state.status &= 0b1111_0111;
         self.state.cycles += 1;
     }
 
@@ -504,6 +504,33 @@ impl CPU {
         self.state.set_v((operand & 0b0100_0000) != 0);
         self.state.cycles += 1;
     }
+
+    fn beq(&mut self, mode: AddressingMode) {
+        let address = self.state.resolve_address(mode);
+        if self.state.get_z() == 1 {
+            self.state.set_pc(address);
+        }
+    }
+
+    fn cpx(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
+        let x = self.state.get_x();
+        let result = x.wrapping_sub(operand);
+        self.state.set_c(if x >= operand { 1 } else { 0 });
+        self.state.set_z(result);
+        self.state.set_n(result);
+        self.state.cycles += 1;
+    }
+
+    fn cpy(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
+        let y = self.state.get_y();
+        let result = y.wrapping_sub(operand);
+        self.state.set_c(if y >= operand { 1 } else { 0 });
+        self.state.set_z(result);
+        self.state.set_n(result);
+        self.state.cycles += 1;
+    }
 }
 
 #[cfg(test)]
@@ -566,5 +593,30 @@ mod tests {
 
         //assert_eq!(cpu.state.a, 0x05); // 0x05 is thursday but it's not working
         assert_eq!(cpu.state.a, 0x01);
+    }
+
+    #[test]
+    fn run_test_suite() {
+        let program = fs::read("./fixtures/6502_functional_test.bin").expect("should be there");
+
+        let mut memory = Memory::new();
+        for (i, byte) in program.iter().enumerate() {
+            if i > 0x4000 {
+                break;
+            }
+            memory.set(0x0000 + i as u16, *byte);
+        }
+
+        memory.set(state::RESET_VECTOR_ADDR, 0x00);
+        memory.set(state::RESET_VECTOR_ADDR + 1, 0x04);
+
+        let mut cpu_state = super::CPUState::new(memory);
+        cpu_state.reset();
+
+        let mut cpu = super::CPU::new(cpu_state);
+        cpu.execute(1000000);
+
+        println!("cycles: {}", cpu.state.cycles);
+        assert!(cpu.state.cycles > 100000000)
     }
 }
