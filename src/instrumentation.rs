@@ -3,15 +3,15 @@ use crate::instruction::opcode_to_instruction;
 use crate::instruction::AddressingMode;
 
 pub struct Trace {
-    pc: u16,
-    a: u8,
-    x: u8,
-    y: u8,
-    sp: u8,
-    sr: u8,
-    opcode: u8,
-    operand: Option<u16>,
-    cycles: u8,
+    pub pc: u16,
+    pub a: u8,
+    pub x: u8,
+    pub y: u8,
+    pub sp: u8,
+    pub sr: u8,
+    pub opcode: u8,
+    pub operand: Option<u16>,
+    pub cycles: u8,
 }
 
 impl Trace {

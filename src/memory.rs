@@ -1,10 +1,12 @@
 pub struct Memory {
-    state: [u8; 0xFFFF],
+    state: [u8; 0x10000],
 }
 
 impl Memory {
     pub fn new() -> Memory {
-        Memory { state: [0; 0xFFFF] }
+        Memory {
+            state: [0; 0x10000],
+        }
     }
 
     pub fn get(&self, address: u16) -> u8 {

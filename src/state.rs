@@ -4,6 +4,7 @@ use crate::memory::Memory;
 pub const ZERO_PAGE: u16 = 0x000;
 pub const STACK_PAGE: u16 = 0x100;
 pub const RESET_VECTOR_ADDR: u16 = 0xFFFC;
+pub const IRQ_VECTOR_ADDR: u16 = 0xFFFE;
 
 pub struct CPUState {
     memory: Memory,

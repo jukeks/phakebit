@@ -3,6 +3,7 @@ use crate::instruction::AddressingMode;
 use crate::instruction::Operation;
 use crate::instrumentation::Trace;
 use crate::state::CPUState;
+use crate::state::IRQ_VECTOR_ADDR;
 
 pub struct CPU {
     state: CPUState,
@@ -33,84 +34,99 @@ impl CPU {
 
     pub fn execute(&mut self, cycles: u64) {
         while self.state.cycles < cycles || cycles == 0 {
-            let pc = self.state.pc;
-            let current_cycles = self.state.cycles;
-            let opcode = self.state.fetch_byte();
-            let instruction = instruction::opcode_to_instruction(opcode);
-            let operand = self.read_operand(instruction.mode);
-
-            match instruction.name {
-                Operation::BRK => break,
-                Operation::ADC => self.adc(instruction.mode),
-                Operation::LDX => self.ldx(instruction.mode),
-                Operation::LDA => self.lda(instruction.mode),
-                Operation::LDY => self.ldy(instruction.mode),
-                Operation::ASL => self.asl(instruction.mode),
-                Operation::ORA => self.ora(instruction.mode),
-                Operation::STA => self.sta(instruction.mode),
-                Operation::STX => self.stx(instruction.mode),
-                Operation::STY => self.sty(instruction.mode),
-                Operation::JMP => self.jmp(instruction.mode),
-                Operation::DEY => self.dey(),
-                Operation::DEX => self.dex(),
-                Operation::INY => self.iny(),
-                Operation::INX => self.inx(),
-                Operation::BPL => self.bpl(instruction.mode),
-                Operation::PHA => self.pha(),
-                Operation::PHP => self.php(),
-                Operation::CMP => self.cmp(instruction.mode),
-                Operation::BCS => self.bcs(instruction.mode),
-                Operation::BCC => self.bcc(instruction.mode),
-                Operation::TXA => self.txa(),
-                Operation::TYA => self.tya(),
-                Operation::TXS => self.txs(),
-                Operation::TSX => self.tsx(),
-                Operation::TAY => self.tay(),
-                Operation::TAX => self.tax(),
-                Operation::CLC => self.clc(),
-                Operation::SEC => self.sec(),
-                Operation::CLI => self.cli(),
-                Operation::SEI => self.sei(),
-                Operation::CLV => self.clv(),
-                Operation::CLD => self.cld(),
-                Operation::SED => self.sed(),
-                Operation::SBC => self.sbc(instruction.mode),
-                Operation::JSR => self.jsr(instruction.mode),
-                Operation::RTS => self.rts(),
-                Operation::ROL => self.rol(instruction.mode),
-                Operation::BNE => self.bne(instruction.mode),
-                Operation::PLA => self.pla(),
-                Operation::PLP => self.plp(),
-                Operation::AND => self.and(instruction.mode),
-                Operation::EOR => self.eor(instruction.mode),
-                Operation::LSR => self.lsr(instruction.mode),
-                Operation::ROR => self.ror(instruction.mode),
-                Operation::BMI => self.bmi(instruction.mode),
-                Operation::BVS => self.bvs(instruction.mode),
-                Operation::BVC => self.bvc(instruction.mode),
-                Operation::RTI => self.rti(),
-                Operation::NOP => self.nop(),
-                Operation::BEQ => self.beq(instruction.mode),
-                Operation::CPX => self.cpx(instruction.mode),
-                Operation::CPY => self.cpy(instruction.mode),
-                Operation::INC => self.inc(instruction.mode),
-                Operation::DEC => self.dec(instruction.mode),
-                Operation::BIT => self.bit(instruction.mode),
-            }
-
-            let t = Trace::new(
-                pc,
-                self.state.a,
-                self.state.x,
-                self.state.y,
-                self.state.sp,
-                self.state.status,
-                opcode,
-                operand,
-                0,
-            );
-            t.print();
+            let trace = self.step();
+            trace.print();
         }
+    }
+
+    pub fn step(&mut self) -> Trace {
+        let pc = self.state.pc;
+        let current_cycles = self.state.cycles;
+        let opcode = self.state.fetch_byte();
+        let instruction = instruction::opcode_to_instruction(opcode);
+        let operand = self.read_operand(instruction.mode);
+
+        match instruction.name {
+            Operation::BRK => self.brk(),
+            Operation::ADC => self.adc(instruction.mode),
+            Operation::LDX => self.ldx(instruction.mode),
+            Operation::LDA => self.lda(instruction.mode),
+            Operation::LDY => self.ldy(instruction.mode),
+            Operation::ASL => self.asl(instruction.mode),
+            Operation::ORA => self.ora(instruction.mode),
+            Operation::STA => self.sta(instruction.mode),
+            Operation::STX => self.stx(instruction.mode),
+            Operation::STY => self.sty(instruction.mode),
+            Operation::JMP => self.jmp(instruction.mode),
+            Operation::DEY => self.dey(),
+            Operation::DEX => self.dex(),
+            Operation::INY => self.iny(),
+            Operation::INX => self.inx(),
+            Operation::BPL => self.bpl(instruction.mode),
+            Operation::PHA => self.pha(),
+            Operation::PHP => self.php(),
+            Operation::CMP => self.cmp(instruction.mode),
+            Operation::BCS => self.bcs(instruction.mode),
+            Operation::BCC => self.bcc(instruction.mode),
+            Operation::TXA => self.txa(),
+            Operation::TYA => self.tya(),
+            Operation::TXS => self.txs(),
+            Operation::TSX => self.tsx(),
+            Operation::TAY => self.tay(),
+            Operation::TAX => self.tax(),
+            Operation::CLC => self.clc(),
+            Operation::SEC => self.sec(),
+            Operation::CLI => self.cli(),
+            Operation::SEI => self.sei(),
+            Operation::CLV => self.clv(),
+            Operation::CLD => self.cld(),
+            Operation::SED => self.sed(),
+            Operation::SBC => self.sbc(instruction.mode),
+            Operation::JSR => self.jsr(instruction.mode),
+            Operation::RTS => self.rts(),
+            Operation::ROL => self.rol(instruction.mode),
+            Operation::BNE => self.bne(instruction.mode),
+            Operation::PLA => self.pla(),
+            Operation::PLP => self.plp(),
+            Operation::AND => self.and(instruction.mode),
+            Operation::EOR => self.eor(instruction.mode),
+            Operation::LSR => self.lsr(instruction.mode),
+            Operation::ROR => self.ror(instruction.mode),
+            Operation::BMI => self.bmi(instruction.mode),
+            Operation::BVS => self.bvs(instruction.mode),
+            Operation::BVC => self.bvc(instruction.mode),
+            Operation::RTI => self.rti(),
+            Operation::NOP => self.nop(),
+            Operation::BEQ => self.beq(instruction.mode),
+            Operation::CPX => self.cpx(instruction.mode),
+            Operation::CPY => self.cpy(instruction.mode),
+            Operation::INC => self.inc(instruction.mode),
+            Operation::DEC => self.dec(instruction.mode),
+            Operation::BIT => self.bit(instruction.mode),
+        }
+
+        Trace::new(
+            pc,
+            self.state.a,
+            self.state.x,
+            self.state.y,
+            self.state.sp,
+            self.state.status,
+            opcode,
+            operand,
+            0,
+        )
+    }
+
+    fn brk(&mut self) {
+        self.state.pc += 1;
+        let return_address = self.state.pc;
+        self.state.push_word(return_address);
+        let mut status = self.state.status;
+        status |= 0b0011_0000;
+        self.state.push_byte(status);
+        self.state.pc = self.state.read_word(IRQ_VECTOR_ADDR);
+        self.state.status |= 0b0000_0100; // set interrupt disable
     }
 
     fn adc(&mut self, mode: AddressingMode) {
@@ -309,7 +325,7 @@ impl CPU {
     }
 
     fn cli(&mut self) {
-        self.state.status &= 0b1111_1101;
+        self.state.status &= 0b1111_1011;
         self.state.cycles += 1;
     }
 
@@ -331,7 +347,6 @@ impl CPU {
     fn sed(&mut self) {
         self.state.status |= 0b0000_1000;
         self.state.cycles += 1;
-        panic!("Decimal mode not implemented");
     }
 
     fn sbc(&mut self, mode: AddressingMode) {
@@ -351,16 +366,14 @@ impl CPU {
 
     fn jsr(&mut self, mode: AddressingMode) {
         let address = self.state.resolve_address(mode);
-        let pc = self.state.pc;
-        self.state.push_word(pc);
+        let return_address = self.state.pc - 1;
+        self.state.push_word(return_address);
         self.state.set_pc(address);
-        self.state.increment_cycles(1);
     }
 
     fn rts(&mut self) {
-        let address = self.state.pop_word();
-        self.state.set_pc(address);
-        self.state.increment_cycles(1);
+        let return_address = self.state.pop_word();
+        self.state.set_pc(return_address + 1);
     }
 
     fn rol(&mut self, mode: AddressingMode) {
@@ -390,7 +403,7 @@ impl CPU {
     }
 
     fn plp(&mut self) {
-        self.state.status = self.state.pop_byte();
+        self.state.status = self.state.pop_byte() & 0b1110_1111; // ignore break flag
         self.state.cycles += 1;
     }
 
@@ -458,7 +471,7 @@ impl CPU {
     }
 
     fn rti(&mut self) {
-        self.state.status = self.state.pop_byte();
+        self.state.status = self.state.pop_byte() & 0b1110_1111; // ignore break flag
         let address = self.state.pop_word();
         self.state.set_pc(address);
         self.state.increment_cycles(1);
@@ -535,7 +548,8 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{memory::Memory, state};
+    use crate::{instrumentation::Trace, memory::Memory, state};
+    use circular_buffer::CircularBuffer;
     use std::fs;
 
     #[test]
@@ -601,9 +615,6 @@ mod tests {
 
         let mut memory = Memory::new();
         for (i, byte) in program.iter().enumerate() {
-            if i > 0x4000 {
-                break;
-            }
             memory.set(0x0000 + i as u16, *byte);
         }
 
@@ -614,9 +625,28 @@ mod tests {
         cpu_state.reset();
 
         let mut cpu = super::CPU::new(cpu_state);
-        cpu.execute(60000);
 
-        println!("cycles: {}", cpu.state.cycles);
-        assert!(cpu.state.cycles > 100000000)
+        let mut buffer = CircularBuffer::<100, Trace>::new();
+        let mut stuck = false;
+        loop {
+            let trace = cpu.step();
+            if buffer.back().is_some() {
+                let last_pc = buffer.back().unwrap().pc;
+                stuck = trace.pc == last_pc;
+            }
+
+            buffer.push_back(trace);
+            if stuck {
+                break;
+            }
+        }
+
+        if stuck {
+            for trace in buffer.iter() {
+                trace.print();
+            }
+        }
+
+        assert!(!stuck);
     }
 }
