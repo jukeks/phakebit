@@ -11,7 +11,7 @@ use shadowcycle::state;
 
 let mut memory = PlainMemory::new();
 let mut cpu_state = CPUState::new(memory);
-// set reset vector to program start or just set sp to the address
+// set reset vector to program start or just point `cpu_state.sp` address
 cpu_state.write_word(state::RESET_VECTOR_ADDR, 0x1234);
 cpu_state.reset();
 
@@ -54,4 +54,19 @@ impl Memory for MemoryMappedIO {
      }
   }
 }
-````
+```
+
+## Instrumentation
+The `Trace` struct is used to instrument the CPU. It contains the state of
+the CPU _after_ executing the instruction. The `CPU::step()` method returns
+a `Trace`.
+
+```
+PC   Op Oper   Disassembly   |A  X  Y  SP|NVDIZC|C
+357E A5 0D     LDA $0D       |00 0E FF FC|011010|3
+3580 71 56     ADC ($56),Y   |00 0E FF FC|001010|5
+3582 08        PHP           |00 0E FF FB|001010|3
+3583 C5 0F     CMP $0F       |00 0E FF FB|001011|3
+3585 D0 FE     BNE $3585     |00 0E FF FB|001011|2
+3587 68        PLA           |3A 0E FF FC|001001|4
+```

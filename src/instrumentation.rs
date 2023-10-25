@@ -1,6 +1,6 @@
 use crate::instruction;
-use crate::instruction::opcode_to_instruction;
 use crate::instruction::AddressingMode;
+use crate::instruction::Instruction;
 
 pub struct Trace {
     pub pc: u16,
@@ -9,9 +9,8 @@ pub struct Trace {
     pub y: u8,
     pub sp: u8,
     pub sr: u8,
-    pub opcode: u8,
+    pub instruction: Instruction,
     pub operand: Option<u16>,
-    pub cycles: u8,
 }
 
 impl Trace {
@@ -22,9 +21,8 @@ impl Trace {
         y: u8,
         sp: u8,
         sr: u8,
-        opcode: u8,
+        instruction: Instruction,
         operand: Option<u16>,
-        cycles: u8,
     ) -> Trace {
         Trace {
             pc: pc,
@@ -33,8 +31,7 @@ impl Trace {
             y: y,
             sp: sp,
             sr: sr,
-            cycles: cycles,
-            opcode: opcode,
+            instruction: instruction,
             operand: operand,
         }
     }
@@ -47,11 +44,9 @@ impl Trace {
         let z_flag = (self.sr >> 1) & 1;
         let c_flag = self.sr & 1;
 
-        let instruction = opcode_to_instruction(self.opcode);
-
-        let name: String = format_operation(instruction.operation);
+        let name: String = format_operation(self.instruction.operation);
         let operand: String = match self.operand {
-            Some(operand) => format_operand(operand, self.pc, instruction.mode),
+            Some(operand) => format_operand(operand, self.pc, self.instruction.mode),
             None => "".to_string(),
         };
 
@@ -71,7 +66,7 @@ impl Trace {
         println!(
             "{:04X} {:02X} {}  {} {:<9} |{:02X} {:02X} {:02X} {:02X}|{}{}{}{}{}{}|{} ",
             self.pc,
-            self.opcode,
+            self.instruction.opcode,
             operand_asm,
             name,
             operand,
@@ -85,7 +80,7 @@ impl Trace {
             i_flag,
             z_flag,
             c_flag,
-            self.cycles,
+            self.instruction.cycles,
         );
     }
 }

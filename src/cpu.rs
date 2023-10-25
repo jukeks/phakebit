@@ -114,9 +114,8 @@ impl<T: Memory> CPU<T> {
             self.state.y,
             self.state.sp,
             self.state.status,
-            opcode,
+            instruction,
             operand,
-            instruction.cycles,
         )
     }
 
