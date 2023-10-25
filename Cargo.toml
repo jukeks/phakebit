@@ -16,6 +16,3 @@ readme = "README.md"
 [dev-dependencies]
 cargo-readme = "3.3.0"
 circular-buffer = "0.1.3"
-
-[badges]
-github = { repository = "jukeks/shadowcycle" }

@@ -1,4 +1,5 @@
-[![Workflow Status](https://github.com/jukeks/shadowcycle/workflows/main/badge.svg)](https://github.com/jukeks/shadowcycle/actions?query=workflow%3A%22main%22)
+[![Rust](https://github.com/jukeks/shadowcycle/actions/workflows/rust.yml/badge.svg)](https://github.com/jukeks/shadowcycle/actions/workflows/rust.yml)
+
 Current version: 0.1.0
 
 # shadowcycle
