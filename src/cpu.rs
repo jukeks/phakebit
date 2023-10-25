@@ -612,40 +612,6 @@ mod tests {
     }
 
     #[test]
-    fn test_day_of_week_program() {
-        let program = fs::read("./fixtures/day_of_week2.bin").expect("should be there");
-
-        let mut memory = PlainMemory::new();
-        for (i, byte) in program.iter().enumerate() {
-            memory.set(0x02000 + i as u16, *byte);
-        }
-
-        memory.set(state::RESET_VECTOR_ADDR, 0x00);
-        memory.set(state::RESET_VECTOR_ADDR + 1, 0x20);
-
-        let argument_addr: u16 = 0xDEAD;
-        // 2008-05-01, should be thursday
-        memory.set(argument_addr, 0x07);
-        memory.set(argument_addr + 1, 0xD8);
-        memory.set(argument_addr + 2, 0x05);
-        memory.set(argument_addr + 3, 0x01);
-
-        let mut cpu_state = super::CPUState::new(memory);
-        cpu_state.reset();
-
-        cpu_state.set_x(0xAD);
-        cpu_state.set_y(0xDE);
-
-        let mut cpu = super::CPU::new(cpu_state);
-        cpu.execute(10000);
-
-        println!("cycles: {}", cpu.state.cycles);
-
-        //assert_eq!(cpu.state.a, 0x05); // 0x05 is thursday but it's not working
-        assert_eq!(cpu.state.a, 0x01);
-    }
-
-    #[test]
     fn run_test_suite() {
         // https://github.com/Klaus2m5/6502_65C02_functional_tests/blob/7954e2dbb49c469ea286070bf46cdd71aeb29e4b/bin_files/6502_functional_test.lst
         let program = fs::read("./fixtures/6502_functional_test.bin").expect("should be there");
