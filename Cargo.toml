@@ -1,5 +1,5 @@
 [package]
-name = "shadowcycle"
+name = "phakebit"
 description = "A 6502 CPU emulator"
 version = "0.1.0"
 edition = "2021"
@@ -9,8 +9,8 @@ exclude = [
     ".gitignore",
 ]
 license-file = "LICENSE"
-homepage = "https://github.com/jukeks/shadowcycle"
-repository = "https://github.com/jukeks/shadowcycle"
+homepage = "https://github.com/jukeks/phakebit"
+repository = "https://github.com/jukeks/phakebit"
 readme = "README.md"
 
 [dev-dependencies]

@@ -1,4 +1,4 @@
-[![Rust](https://github.com/jukeks/shadowcycle/actions/workflows/rust.yml/badge.svg)](https://github.com/jukeks/shadowcycle/actions/workflows/rust.yml)
+[![Rust](https://github.com/jukeks/phakebit/actions/workflows/rust.yml/badge.svg)](https://github.com/jukeks/phakebit/actions/workflows/rust.yml)
 
 Current version: {{version}}
 

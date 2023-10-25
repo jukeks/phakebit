@@ -2,10 +2,10 @@
 //!
 //! ## Examples
 //! ```rust
-//! use shadowcycle::memory::PlainMemory;
-//! use shadowcycle::cpu::CPU;
-//! use shadowcycle::state::CPUState;
-//! use shadowcycle::state;
+//! use phakebit::memory::PlainMemory;
+//! use phakebit::cpu::CPU;
+//! use phakebit::state::CPUState;
+//! use phakebit::state;
 //!
 //! let mut memory = PlainMemory::new();
 //! let mut cpu_state = CPUState::new(memory);
@@ -26,7 +26,7 @@
 //! ### Example
 //!
 //! ```rust
-//! use shadowcycle::memory::Memory;
+//! use phakebit::memory::Memory;
 //!
 //! struct MemoryMappedIO {
 //!    state: [u8; 0x10000],

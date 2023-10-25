@@ -1,17 +1,17 @@
-[![Rust](https://github.com/jukeks/shadowcycle/actions/workflows/rust.yml/badge.svg)](https://github.com/jukeks/shadowcycle/actions/workflows/rust.yml)
+[![Rust](https://github.com/jukeks/phakebit/actions/workflows/rust.yml/badge.svg)](https://github.com/jukeks/phakebit/actions/workflows/rust.yml)
 
 Current version: 0.1.0
 
-# shadowcycle
+# phakebit
 
 This is a crate for emulating a 6502 CPU.
 
 ### Examples
 ```rust
-use shadowcycle::memory::PlainMemory;
-use shadowcycle::cpu::CPU;
-use shadowcycle::state::CPUState;
-use shadowcycle::state;
+use phakebit::memory::PlainMemory;
+use phakebit::cpu::CPU;
+use phakebit::state::CPUState;
+use phakebit::state;
 
 let mut memory = PlainMemory::new();
 let mut cpu_state = CPUState::new(memory);
@@ -32,7 +32,7 @@ your own struct.
 #### Example
 
 ```rust
-use shadowcycle::memory::Memory;
+use phakebit::memory::Memory;
 
 struct MemoryMappedIO {
    state: [u8; 0x10000],
