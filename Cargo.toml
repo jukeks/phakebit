@@ -1,14 +1,14 @@
 [package]
 name = "phakebit"
 description = "A 6502 CPU emulator"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 exclude = [
     "fixtures/*",
     ".github/",
     ".gitignore",
 ]
-license-file = "LICENSE"
+license = "MIT"
 homepage = "https://github.com/jukeks/phakebit"
 repository = "https://github.com/jukeks/phakebit"
 readme = "README.md"
