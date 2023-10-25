@@ -1,7 +1,5 @@
 [![Rust](https://github.com/jukeks/phakebit/actions/workflows/rust.yml/badge.svg)](https://github.com/jukeks/phakebit/actions/workflows/rust.yml)
 
-Current version: 0.1.0
-
 # phakebit
 
 This is a crate for emulating a 6502 CPU.
