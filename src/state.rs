@@ -1,9 +1,7 @@
 use crate::instruction::AddressingMode;
 use crate::memory::Memory;
 
-pub const ZERO_PAGE: u16 = 0x000;
 pub const STACK_PAGE: u16 = 0x100;
-pub const NMI_VECTOR_ADDR: u16 = 0xFFFA;
 pub const RESET_VECTOR_ADDR: u16 = 0xFFFC;
 pub const IRQ_VECTOR_ADDR: u16 = 0xFFFE;
 
@@ -45,16 +43,11 @@ impl CPUState {
     }
 
     pub fn read_byte(&mut self, address: u16) -> u8 {
-        self.cycles += 1;
         let val = self.memory.get(address);
-
-        //println!("    read from address {:04X} value {:02X}", address, val);
         val
     }
 
     pub fn write_byte(&mut self, address: u16, value: u8) {
-        //println!("    write to address {:04X} value {:02X}", address, value);
-        self.cycles += 1;
         self.memory.set(address, value);
     }
 
@@ -86,7 +79,6 @@ impl CPUState {
     pub fn push_byte(&mut self, value: u8) {
         self.write_byte(STACK_PAGE + self.sp as u16, value);
         self.sp = self.sp.wrapping_sub(1);
-        self.cycles += 1;
     }
 
     pub fn push_word(&mut self, value: u16) {
@@ -98,7 +90,6 @@ impl CPUState {
 
     pub fn pop_byte(&mut self) -> u8 {
         self.sp = self.sp.wrapping_add(1);
-        self.cycles += 1;
         self.read_byte(0x100 + self.sp as u16)
     }
 
@@ -138,21 +129,6 @@ impl CPUState {
 
     pub fn set_y(&mut self, value: u8) {
         self.y = value;
-    }
-
-    pub fn read_a(&mut self) -> u8 {
-        self.cycles += 1;
-        self.a
-    }
-
-    pub fn read_x(&mut self) -> u8 {
-        self.cycles += 1;
-        self.x
-    }
-
-    pub fn read_y(&mut self) -> u8 {
-        self.cycles += 1;
-        self.y
     }
 
     pub fn set_n(&mut self, value: u8) {
