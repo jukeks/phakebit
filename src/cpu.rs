@@ -133,12 +133,53 @@ impl CPU {
         let operand = self.state.fetch_operand(mode);
         let a = self.state.get_a();
         let carry = self.state.get_c() as u8;
-        let sum = a as u16 + operand as u16 + carry as u16;
+
+        let sum = if self.state.get_d() == 1 {
+            let mut result = a as u16 + operand as u16 + carry as u16;
+            if (a & 0x0F) + (operand & 0x0F) + carry > 0x09 {
+                result += 0x06;
+            }
+            if result > 0x99 {
+                result += 0x60;
+            }
+            result
+        } else {
+            a as u16 + operand as u16 + carry as u16
+        };
+
         self.state.set_c((sum > 0xFF) as u8);
         let result = (sum & 0xFF) as u8;
         self.state.set_a(result);
         self.state
             .set_v(((a ^ result) & (operand ^ result) & 0x80) != 0);
+        self.state.set_z(result);
+        self.state.set_n(result);
+        self.state.cycles += 1;
+    }
+
+    fn sbc(&mut self, mode: AddressingMode) {
+        let operand = self.state.fetch_operand(mode);
+        let a = self.state.get_a();
+        let carry = self.state.get_c() as u8;
+
+        let sum = if self.state.get_d() == 1 {
+            let mut result = a as u16 + (!operand) as u16 + carry as u16;
+            if (a & 0x0F) < (operand & 0x0F) + 1 - carry {
+                result -= 0x06;
+            }
+            if result < 0x100 {
+                result -= 0x60;
+            }
+            result
+        } else {
+            a as u16 + (!operand) as u16 + carry as u16
+        };
+
+        self.state.set_c((sum > 0xFF) as u8);
+        let result = (sum & 0xFF) as u8;
+        self.state.set_a(result);
+        self.state
+            .set_v(((a ^ result) & (!operand ^ result) & 0x80) != 0);
         self.state.set_z(result);
         self.state.set_n(result);
         self.state.cycles += 1;
@@ -178,15 +219,28 @@ impl CPU {
     }
 
     fn asl(&mut self, mode: AddressingMode) {
-        let address = self.state.resolve_address(mode);
-        let value = self.state.read_byte(address);
-        let c = (value & 0b1000_0000) >> 7;
-        let result = value << 1;
-        self.state.write_byte(address, result);
-        self.state.set_c(c);
-        self.state.set_z(result);
-        self.state.set_n(result);
-        self.state.cycles += 1;
+        match mode {
+            AddressingMode::ACC => {
+                let c = (self.state.a & 0b1000_0000) >> 7;
+                let result = self.state.a << 1;
+                self.state.a = result;
+                self.state.set_c(c);
+                self.state.set_z(result);
+                self.state.set_n(result);
+                self.state.cycles += 1;
+            }
+            _ => {
+                let address = self.state.resolve_address(mode);
+                let value = self.state.read_byte(address);
+                let c = (value & 0b1000_0000) >> 7;
+                let result = value << 1;
+                self.state.write_byte(address, result);
+                self.state.set_c(c);
+                self.state.set_z(result);
+                self.state.set_n(result);
+                self.state.cycles += 1;
+            }
+        }
     }
 
     fn sta(&mut self, mode: AddressingMode) {
@@ -345,22 +399,7 @@ impl CPU {
     }
 
     fn sed(&mut self) {
-        self.state.status |= 0b0000_1000;
-        self.state.cycles += 1;
-    }
-
-    fn sbc(&mut self, mode: AddressingMode) {
-        let operand = self.state.fetch_operand(mode);
-        let a = self.state.get_a();
-        let carry = self.state.get_c() as u8;
-        let sum = a as u16 + (!operand) as u16 + carry as u16;
-        self.state.set_c((sum > 0xFF) as u8);
-        let result = (sum & 0xFF) as u8;
-        self.state.set_a(result);
-        self.state
-            .set_v(((a ^ result) & (!operand ^ result) & 0x80) != 0);
-        self.state.set_z(result);
-        self.state.set_n(result);
+        self.state.set_d(1);
         self.state.cycles += 1;
     }
 
@@ -377,15 +416,28 @@ impl CPU {
     }
 
     fn rol(&mut self, mode: AddressingMode) {
-        let address = self.state.resolve_address(mode);
-        let value = self.state.read_byte(address);
-        let c = (value & 0b1000_0000) >> 7;
-        let result = (value << 1) | self.state.get_c();
-        self.state.write_byte(address, result);
-        self.state.set_c(c);
-        self.state.set_z(result);
-        self.state.set_n(result);
-        self.state.cycles += 1;
+        match mode {
+            AddressingMode::ACC => {
+                let c = (self.state.a & 0b1000_0000) >> 7;
+                let result = (self.state.a << 1) | self.state.get_c();
+                self.state.a = result;
+                self.state.set_c(c);
+                self.state.set_z(result);
+                self.state.set_n(result);
+                self.state.cycles += 1;
+            }
+            _ => {
+                let address = self.state.resolve_address(mode);
+                let value = self.state.read_byte(address);
+                let c = (value & 0b1000_0000) >> 7;
+                let result = (value << 1) | self.state.get_c();
+                self.state.write_byte(address, result);
+                self.state.set_c(c);
+                self.state.set_z(result);
+                self.state.set_n(result);
+                self.state.cycles += 1;
+            }
+        }
     }
 
     fn bne(&mut self, mode: AddressingMode) {
@@ -426,27 +478,53 @@ impl CPU {
     }
 
     fn lsr(&mut self, mode: AddressingMode) {
-        let address = self.state.resolve_address(mode);
-        let value = self.state.read_byte(address);
-        let c = value & 0b0000_0001;
-        let result = value >> 1;
-        self.state.write_byte(address, result);
-        self.state.set_c(c);
-        self.state.set_z(result);
-        self.state.set_n(result);
-        self.state.cycles += 1;
+        match mode {
+            AddressingMode::ACC => {
+                let c = self.state.a & 0b0000_0001;
+                let result = self.state.a >> 1;
+                self.state.a = result;
+                self.state.set_c(c);
+                self.state.set_z(result);
+                self.state.set_n(result);
+                self.state.cycles += 1;
+            }
+            _ => {
+                let address = self.state.resolve_address(mode);
+                let value = self.state.read_byte(address);
+                let c = value & 0b0000_0001;
+                let result = value >> 1;
+                self.state.write_byte(address, result);
+                self.state.set_c(c);
+                self.state.set_z(result);
+                self.state.set_n(result);
+                self.state.cycles += 1;
+            }
+        }
     }
 
     fn ror(&mut self, mode: AddressingMode) {
-        let address = self.state.resolve_address(mode);
-        let value = self.state.read_byte(address);
-        let c = value & 0b0000_0001;
-        let result = (value >> 1) | (self.state.get_c() << 7);
-        self.state.write_byte(address, result);
-        self.state.set_c(c);
-        self.state.set_z(result);
-        self.state.set_n(result);
-        self.state.cycles += 1;
+        match mode {
+            AddressingMode::ACC => {
+                let c = self.state.a & 0b0000_0001;
+                let result = (self.state.a >> 1) | (self.state.get_c() << 7);
+                self.state.a = result;
+                self.state.set_c(c);
+                self.state.set_z(result);
+                self.state.set_n(result);
+                self.state.cycles += 1;
+            }
+            _ => {
+                let address = self.state.resolve_address(mode);
+                let value = self.state.read_byte(address);
+                let c = value & 0b0000_0001;
+                let result = (value >> 1) | (self.state.get_c() << 7);
+                self.state.write_byte(address, result);
+                self.state.set_c(c);
+                self.state.set_z(result);
+                self.state.set_n(result);
+                self.state.cycles += 1;
+            }
+        }
     }
 
     fn bmi(&mut self, mode: AddressingMode) {
@@ -611,6 +689,7 @@ mod tests {
 
     #[test]
     fn run_test_suite() {
+        // https://github.com/Klaus2m5/6502_65C02_functional_tests/blob/7954e2dbb49c469ea286070bf46cdd71aeb29e4b/bin_files/6502_functional_test.lst
         let program = fs::read("./fixtures/6502_functional_test.bin").expect("should be there");
 
         let mut memory = Memory::new();
@@ -647,6 +726,9 @@ mod tests {
             }
         }
 
-        assert!(!stuck);
+        // 0x3469 is the last instruction in the test suite
+        if cpu.state.pc != 0x3469 {
+            assert!(!stuck);
+        }
     }
 }

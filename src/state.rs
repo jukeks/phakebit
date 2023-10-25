@@ -202,6 +202,18 @@ impl CPUState {
         (self.status & 0b0000_0010) >> 1
     }
 
+    pub fn set_d(&mut self, value: u8) {
+        if value != 0 {
+            self.status |= 0b0000_1000;
+        } else {
+            self.status &= 0b1111_0111;
+        }
+    }
+
+    pub fn get_d(&self) -> u8 {
+        (self.status & 0b0000_1000) >> 3
+    }
+
     pub fn resolve_address(&mut self, mode: AddressingMode) -> u16 {
         match mode {
             AddressingMode::ZPG => self.fetch_byte() as u16,
@@ -231,9 +243,10 @@ impl CPUState {
                 self.read_word(indirect_address)
             }
             AddressingMode::XIND => {
-                let zero_page_address = self.fetch_byte();
-                let zero_page_offset = zero_page_address.wrapping_add(self.x) as u16;
-                let effective_address = self.read_word(zero_page_offset);
+                let operand = self.fetch_byte();
+                // Wraps around to stay in zero-page
+                let zero_page_address = (operand.wrapping_add(self.x)) as u8;
+                let effective_address = self.read_word(zero_page_address as u16);
                 effective_address
             }
             AddressingMode::INDY => {
@@ -288,7 +301,9 @@ impl CPUState {
             }
             AddressingMode::XIND => {
                 let operand = self.fetch_byte();
-                let address = self.read_word(operand as u16 + self.x as u16);
+                // Wraps around to stay in zero-page
+                let zero_page_address = (operand.wrapping_add(self.x)) as u8;
+                let address = self.read_word(zero_page_address as u16);
                 self.read_byte(address)
             }
             AddressingMode::INDY => {
