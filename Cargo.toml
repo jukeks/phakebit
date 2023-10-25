@@ -1,7 +1,17 @@
 [package]
 name = "shadowcycle"
+description = "A 6502 CPU emulator"
 version = "0.1.0"
 edition = "2021"
+exclude = [
+    "fixtures/*",
+]
+license-file = "LICENSE"
+homepage = "https://github.com/jukeks/shadowcycle"
+repository = "https://github.com/jukeks/shadowcycle"
+readme = "README.md"
+
+
 
 [dev-dependencies]
 cargo-readme = "3.3.0"
