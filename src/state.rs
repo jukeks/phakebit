@@ -3,6 +3,7 @@ use crate::memory::Memory;
 
 pub const ZERO_PAGE: u16 = 0x000;
 pub const STACK_PAGE: u16 = 0x100;
+pub const NMI_VECTOR_ADDR: u16 = 0xFFFA;
 pub const RESET_VECTOR_ADDR: u16 = 0xFFFC;
 pub const IRQ_VECTOR_ADDR: u16 = 0xFFFE;
 
@@ -266,53 +267,44 @@ impl CPUState {
 
     pub fn fetch_operand(&mut self, mode: AddressingMode) -> u8 {
         match mode {
+            AddressingMode::ACC => self.get_a(),
             AddressingMode::IMM => self.fetch_byte(),
             AddressingMode::ZPG => {
-                let operand = self.fetch_byte();
-                self.read_byte(operand as u16)
+                let address = self.resolve_address(mode);
+                self.read_byte(address as u16)
             }
             AddressingMode::ZPGX => {
-                let operand = self.fetch_byte();
-                let address = operand.wrapping_add(self.x);
+                let address = self.resolve_address(mode);
                 self.read_byte(address as u16)
             }
             AddressingMode::ZPGY => {
-                let operand = self.fetch_byte();
-                let address = operand.wrapping_add(self.y);
+                let address = self.resolve_address(mode);
                 self.read_byte(address as u16)
             }
             AddressingMode::ABS => {
-                let operand = self.fetch_word();
-                self.read_byte(operand)
+                let address = self.resolve_address(mode);
+                self.read_byte(address)
             }
             AddressingMode::ABSX => {
-                let operand = self.fetch_word();
-                let address = operand.wrapping_add(self.x as u16);
+                let address = self.resolve_address(mode);
                 self.read_byte(address)
             }
             AddressingMode::ABSY => {
-                let operand = self.fetch_word();
-                let address = operand.wrapping_add(self.y as u16);
+                let address = self.resolve_address(mode);
                 self.read_byte(address)
             }
             AddressingMode::IND => {
-                let operand = self.fetch_word();
-                self.read_byte(operand)
+                let address = self.resolve_address(mode);
+                self.read_byte(address)
             }
             AddressingMode::XIND => {
-                let operand = self.fetch_byte();
-                // Wraps around to stay in zero-page
-                let zero_page_address = (operand.wrapping_add(self.x)) as u8;
-                let address = self.read_word(zero_page_address as u16);
+                let address = self.resolve_address(mode);
                 self.read_byte(address)
             }
             AddressingMode::INDY => {
-                let operand = self.fetch_byte();
-                let address = self.read_word(operand as u16) + self.y as u16;
+                let address = self.resolve_address(mode);
                 self.read_byte(address)
             }
-            AddressingMode::ACC => self.get_a(),
-            AddressingMode::REL => self.fetch_byte(),
             _ => panic!("Unsupported addressing mode: {:?}", mode),
         }
     }
