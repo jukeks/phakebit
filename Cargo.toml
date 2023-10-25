@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dev-dependencies]
+cargo-readme = "3.3.0"
 circular-buffer = "0.1.3"
