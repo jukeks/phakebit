@@ -46,7 +46,7 @@ impl<T: Memory> CPU<T> {
         let instruction = instruction::opcode_to_instruction(opcode);
         let operand = self.read_operand(instruction.mode);
 
-        match instruction.name {
+        match instruction.operation {
             Operation::BRK => self.brk(),
             Operation::ADC => self.adc(instruction.mode),
             Operation::LDX => self.ldx(instruction.mode),

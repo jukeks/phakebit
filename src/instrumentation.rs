@@ -49,7 +49,7 @@ impl Trace {
 
         let instruction = opcode_to_instruction(self.opcode);
 
-        let name: String = format_operation(instruction.name);
+        let name: String = format_operation(instruction.operation);
         let operand: String = match self.operand {
             Some(operand) => format_operand(operand, self.pc, instruction.mode),
             None => "".to_string(),
