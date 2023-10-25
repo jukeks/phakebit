@@ -1,8 +1,11 @@
+[![Workflow Status](https://github.com/jukeks/shadowcycle/workflows/main/badge.svg)](https://github.com/jukeks/shadowcycle/actions?query=workflow%3A%22main%22)
+Current version: 0.1.0
+
 # shadowcycle
 
 This is a crate for emulating a 6502 CPU.
 
-## Examples
+### Examples
 ```rust
 use shadowcycle::memory::PlainMemory;
 use shadowcycle::cpu::CPU;
@@ -19,13 +22,13 @@ let mut cpu = CPU::new(cpu_state);
 cpu.execute(100000);
 ```
 
-## Memory maps
+### Memory maps
 The `Memory` trait is used to implement memory. The PlainMemory struct is a
 simple implementation of this trait without any mappings. If you want to map
 parts of the memory to IO or ROM, you can implement the `Memory` trait for
 your own struct.
 
-### Example
+#### Example
 
 ```rust
 use shadowcycle::memory::Memory;
@@ -56,17 +59,22 @@ impl Memory for MemoryMappedIO {
 }
 ```
 
-## Instrumentation
+### Instrumentation
 The `Trace` struct is used to instrument the CPU. It contains the state of
 the CPU _after_ executing the instruction. The `CPU::step()` method returns
 a `Trace`.
 
 ```
 PC   Op Oper   Disassembly   |A  X  Y  SP|NVDIZC|C
-357E A5 0D     LDA $0D       |00 0E FF FC|011010|3
-3580 71 56     ADC ($56),Y   |00 0E FF FC|001010|5
-3582 08        PHP           |00 0E FF FB|001010|3
-3583 C5 0F     CMP $0F       |00 0E FF FB|001011|3
-3585 D0 FE     BNE $3585     |00 0E FF FB|001011|2
-3587 68        PLA           |3A 0E FF FC|001001|4
+---- -- ----   -----------   |-----------|------|-
+33D1 A5 0E     LDA $0E       |00 0E FF FF|011010|3
+33D3 F0 30     BEQ $3405     |00 0E FF FF|011010|2
+3405 AD 00 02  LDA $0200     |2A 0E FF FF|011000|4
+3408 C9 2A     CMP #$2A      |2A 0E FF FF|011011|2
+340A D0 FE     BNE $340A     |2A 0E FF FF|011011|2
+340C A9 2B     LDA #$2B      |2B 0E FF FF|011001|2
+340E 8D 00 02  STA $0200     |2B 0E FF FF|011001|4
 ```
+
+# License
+See [LICENSE](LICENSE) file.
