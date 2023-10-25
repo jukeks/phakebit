@@ -9,7 +9,7 @@
 //!
 //! let mut memory = PlainMemory::new();
 //! let mut cpu_state = CPUState::new(memory);
-//! // set reset vector to program start or just set sp to same address
+//! // set reset vector to program start or just set sp to the address
 //! cpu_state.write_word(state::RESET_VECTOR_ADDR, 0x1234);
 //! cpu_state.reset();
 //!
@@ -17,23 +17,25 @@
 //! cpu.execute(100000);
 //! ```
 //!
-//! # Memory mapped IO
-//! The memory trait is used to implement memory mapped IO. The
-//! PlainMemory struct is a simple implementation of this trait.
+//! # Memory maps
+//! The `Memory` trait is used to implement memory. The PlainMemory struct is a
+//! simple implementation of this trait without any mappings. If you want to map
+//! parts of the memory to IO or ROM, you can implement the `Memory` trait for
+//! your own struct.
 //!
 //! ## Example
 //!
 //! ```rust
 //! use shadowcycle::memory::Memory;
 //!
-//! struct IOMappedMemory {
+//! struct MemoryMappedIO {
 //!    state: [u8; 0x10000],
 //! }
 //!
 //! fn read_io(address: u16) -> u8 { 0 }
 //! fn write_io(address: u16, value: u8) {}
 //!
-//! impl Memory for IOMappedMemory {
+//! impl Memory for MemoryMappedIO {
 //!    fn get(&self, address: u16) -> u8 {
 //!       match address {
 //!         0x0000..=0x1FFF => self.state[address as usize],
