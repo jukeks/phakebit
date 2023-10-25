@@ -2,15 +2,16 @@ use crate::instruction;
 use crate::instruction::AddressingMode;
 use crate::instruction::Operation;
 use crate::instrumentation::Trace;
+use crate::memory::Memory;
 use crate::state::CPUState;
 use crate::state::IRQ_VECTOR_ADDR;
 
-pub struct CPU {
-    state: CPUState,
+pub struct CPU<T: Memory> {
+    state: CPUState<T>,
 }
 
-impl CPU {
-    pub fn new(state: CPUState) -> CPU {
+impl<T: Memory> CPU<T> {
+    pub fn new(state: CPUState<T>) -> CPU<T> {
         CPU { state: state }
     }
 
@@ -584,7 +585,7 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instrumentation::Trace, memory::Memory, state};
+    use crate::{instrumentation::Trace, memory::Memory, memory::PlainMemory, state};
     use circular_buffer::CircularBuffer;
     use std::fs;
 
@@ -594,7 +595,7 @@ mod tests {
             0xA2, 0x00, 0xA9, 0x0F, 0x09, 0xF0, 0x85, 0x00, 0x4C, 0x08, 0x06,
         ];
 
-        let mut memory = Memory::new();
+        let mut memory = PlainMemory::new();
         for (i, byte) in program.iter().enumerate() {
             memory.set(0x0600 + i as u16, *byte);
         }
@@ -615,7 +616,7 @@ mod tests {
     fn test_day_of_week_program() {
         let program = fs::read("./fixtures/day_of_week2.bin").expect("should be there");
 
-        let mut memory = Memory::new();
+        let mut memory = PlainMemory::new();
         for (i, byte) in program.iter().enumerate() {
             memory.set(0x02000 + i as u16, *byte);
         }
@@ -650,7 +651,7 @@ mod tests {
         // https://github.com/Klaus2m5/6502_65C02_functional_tests/blob/7954e2dbb49c469ea286070bf46cdd71aeb29e4b/bin_files/6502_functional_test.lst
         let program = fs::read("./fixtures/6502_functional_test.bin").expect("should be there");
 
-        let mut memory = Memory::new();
+        let mut memory = PlainMemory::new();
         for (i, byte) in program.iter().enumerate() {
             memory.set(0x0000 + i as u16, *byte);
         }

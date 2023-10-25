@@ -5,11 +5,11 @@ mod memory;
 mod state;
 
 use cpu::CPU;
-use memory::Memory;
+use memory::PlainMemory;
 use state::CPUState;
 
 fn main() {
-    let memory = Memory::new();
+    let memory = PlainMemory::new();
     let mut state = CPUState::new(memory);
     state.reset();
     let mut cpu = CPU::new(state);

@@ -5,8 +5,8 @@ pub const STACK_PAGE: u16 = 0x100;
 pub const RESET_VECTOR_ADDR: u16 = 0xFFFC;
 pub const IRQ_VECTOR_ADDR: u16 = 0xFFFE;
 
-pub struct CPUState {
-    memory: Memory,
+pub struct CPUState<T: Memory> {
+    memory: T,
 
     pub a: u8,
     pub x: u8,
@@ -17,8 +17,8 @@ pub struct CPUState {
     pub cycles: u64,
 }
 
-impl CPUState {
-    pub fn new(memory: Memory) -> CPUState {
+impl<T: Memory> CPUState<T> {
+    pub fn new(memory: T) -> CPUState<T> {
         CPUState {
             a: 0,
             x: 0,
@@ -287,9 +287,11 @@ impl CPUState {
 }
 
 mod tests {
+    use crate::memory::PlainMemory;
+
     #[test]
     fn test_reset() {
-        let mut cpu = super::CPUState::new(super::Memory::new());
+        let mut cpu = super::CPUState::new(PlainMemory::new());
         cpu.reset();
         assert_eq!(cpu.a, 0);
         assert_eq!(cpu.x, 0);
@@ -301,7 +303,7 @@ mod tests {
 
     #[test]
     fn test_write_word() {
-        let memory = super::Memory::new();
+        let memory = PlainMemory::new();
         let mut cpu = super::CPUState::new(memory);
         cpu.reset();
         cpu.write_word(0x001, 0x1234);
@@ -312,7 +314,7 @@ mod tests {
 
     #[test]
     fn test_push_word() {
-        let memory = super::Memory::new();
+        let memory = PlainMemory::new();
         let mut cpu = super::CPUState::new(memory);
         cpu.reset();
         cpu.push_word(0x1234);
