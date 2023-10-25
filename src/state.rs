@@ -291,7 +291,8 @@ mod tests {
 
     #[test]
     fn test_reset() {
-        let mut cpu = super::CPUState::new(PlainMemory::new());
+        let memory = PlainMemory::new();
+        let mut cpu = super::CPUState::new(memory);
         cpu.reset();
         assert_eq!(cpu.a, 0);
         assert_eq!(cpu.x, 0);
