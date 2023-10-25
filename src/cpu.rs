@@ -115,7 +115,7 @@ impl CPU {
             self.state.status,
             opcode,
             operand,
-            0,
+            instruction.cycles,
         )
     }
 
