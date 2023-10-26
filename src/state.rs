@@ -292,35 +292,35 @@ mod tests {
     #[test]
     fn test_reset() {
         let memory = PlainMemory::new();
-        let mut cpu = super::CPUState::new(memory);
-        cpu.reset();
-        assert_eq!(cpu.a, 0);
-        assert_eq!(cpu.x, 0);
-        assert_eq!(cpu.y, 0);
-        assert_eq!(cpu.pc, 0x0000);
-        assert_eq!(cpu.sp, 0xFF);
-        assert_eq!(cpu.status, 0x36);
+        let mut state = super::CPUState::new(memory);
+        state.reset();
+        assert_eq!(state.a, 0);
+        assert_eq!(state.x, 0);
+        assert_eq!(state.y, 0);
+        assert_eq!(state.pc, 0x0000);
+        assert_eq!(state.sp, 0xFF);
+        assert_eq!(state.status, 0x36);
     }
 
     #[test]
     fn test_write_word() {
         let memory = PlainMemory::new();
-        let mut cpu = super::CPUState::new(memory);
-        cpu.reset();
-        cpu.write_word(0x001, 0x1234);
+        let mut state = super::CPUState::new(memory);
+        state.reset();
+        state.write_word(0x001, 0x1234);
 
-        let value = cpu.read_word(0x0001);
+        let value = state.read_word(0x0001);
         assert_eq!(value, 0x1234);
     }
 
     #[test]
     fn test_push_word() {
         let memory = PlainMemory::new();
-        let mut cpu = super::CPUState::new(memory);
-        cpu.reset();
-        cpu.push_word(0x1234);
+        let mut state = super::CPUState::new(memory);
+        state.reset();
+        state.push_word(0x1234);
 
-        let value = cpu.pop_word();
+        let value = state.pop_word();
         assert_eq!(value, 0x1234);
     }
 }
