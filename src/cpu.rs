@@ -1,3 +1,5 @@
+//! Implementation of the instruction set
+
 use crate::instruction;
 use crate::instruction::AddressingMode;
 use crate::instruction::Operation;
@@ -6,10 +8,13 @@ use crate::memory::Memory;
 use crate::state::CPUState;
 use crate::state::IRQ_VECTOR_ADDR;
 
+/// The CPU emulator
 pub struct CPU<T: Memory> {
     state: CPUState<T>,
 }
 
+/// Implementation of the instruction set.
+/// Instructions are executed against the `CPUState` struct.
 impl<T: Memory> CPU<T> {
     pub fn new(state: CPUState<T>) -> CPU<T> {
         CPU { state: state }
@@ -33,6 +38,8 @@ impl<T: Memory> CPU<T> {
         }
     }
 
+    /// Execute the CPU for a given number of cycles.
+    /// Prints a trace of each instruction executed to stdout.
     pub fn execute(&mut self, cycles: u64) {
         while self.state.cycles < cycles || cycles == 0 {
             let trace = self.step();
@@ -40,6 +47,7 @@ impl<T: Memory> CPU<T> {
         }
     }
 
+    /// Execute the next instruction.
     pub fn step(&mut self) -> Trace {
         let pc = self.state.pc;
         let opcode = self.state.fetch_byte();

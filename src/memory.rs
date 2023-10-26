@@ -1,8 +1,12 @@
+//! Models the memory
+
+/// Abstract memory interface
 pub trait Memory {
     fn get(&self, address: u16) -> u8;
     fn set(&mut self, address: u16, value: u8);
 }
 
+/// Plain memory implementation with just 64K of RAM
 pub struct PlainMemory {
     state: [u8; 0x10000],
 }

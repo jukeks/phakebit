@@ -1,10 +1,16 @@
+//! Model the state of the CPU in addition to accessing memory.
+
 use crate::instruction::AddressingMode;
 use crate::memory::Memory;
 
+/// Stack page start address
 pub const STACK_PAGE: u16 = 0x100;
+/// Address where the reset vector is stored
 pub const RESET_VECTOR_ADDR: u16 = 0xFFFC;
+/// Address where the IRQ vector is stored
 pub const IRQ_VECTOR_ADDR: u16 = 0xFFFE;
 
+/// Represents the state of the CPU.
 pub struct CPUState<T: Memory> {
     memory: T,
 
@@ -31,6 +37,7 @@ impl<T: Memory> CPUState<T> {
         }
     }
 
+    /// Resets the CPU to the initial state and sets PC to the reset vector.
     pub fn reset(&mut self) {
         self.a = 0;
         self.x = 0;
@@ -64,23 +71,27 @@ impl<T: Memory> CPUState<T> {
         self.write_byte(address + 1, high);
     }
 
+    /// Fetch the next byte at PC and increment PC.
     pub fn fetch_byte(&mut self) -> u8 {
         let byte = self.read_byte(self.pc);
         self.pc += 1;
         byte
     }
 
+    /// Fetch the next word at PC and increment PC.
     pub fn fetch_word(&mut self) -> u16 {
         let word = self.read_word(self.pc);
         self.pc += 2;
         word
     }
 
+    /// Push a byte to stack
     pub fn push_byte(&mut self, value: u8) {
         self.write_byte(STACK_PAGE + self.sp as u16, value);
         self.sp = self.sp.wrapping_sub(1);
     }
 
+    /// Push a word to stack
     pub fn push_word(&mut self, value: u16) {
         let low = value as u8;
         let high = (value >> 8) as u8;
@@ -88,11 +99,13 @@ impl<T: Memory> CPUState<T> {
         self.push_byte(low);
     }
 
+    /// Pop a byte from stack
     pub fn pop_byte(&mut self) -> u8 {
         self.sp = self.sp.wrapping_add(1);
         self.read_byte(0x100 + self.sp as u16)
     }
 
+    /// Pop a word from stack
     pub fn pop_word(&mut self) -> u16 {
         let low = self.pop_byte() as u16;
         let high = self.pop_byte() as u16;
@@ -191,6 +204,7 @@ impl<T: Memory> CPUState<T> {
         (self.status & 0b0000_1000) >> 3
     }
 
+    /// Resolve the effective address of an instruction.
     pub fn resolve_address(&mut self, mode: AddressingMode) -> u16 {
         match mode {
             AddressingMode::ZPG => self.fetch_byte() as u16,
@@ -241,6 +255,7 @@ impl<T: Memory> CPUState<T> {
         }
     }
 
+    /// Fetch the operand of an instruction.
     pub fn fetch_operand(&mut self, mode: AddressingMode) -> u8 {
         match mode {
             AddressingMode::ACC => self.get_a(),

@@ -1,26 +1,44 @@
+//! Description of the instruction set of MOS 6502 CPU
+
 #[derive(Copy, Clone, Debug)]
+/// Addressing mode for the instruction
+/// See: <https://www.masswerk.at/6502/6502_instruction_set.html#description>
 pub enum AddressingMode {
+    /// Accumulator
     ACC,
 
+    /// Absolute address
     ABS,
+    /// Absolute address with X register offset
     ABSX,
+    /// Absolute address with Y register offset
     ABSY,
 
+    /// Immediate value
     IMM,
 
+    /// Implied
     IMPL,
 
+    /// Indirect i.e. read address from address
     IND,
+    /// Indirect with X register offset
     XIND,
+    /// Indirect with Y register offset
     INDY,
 
+    /// Relative to PC
     REL,
 
+    /// Zero page address
     ZPG,
+    /// Zero page address with X register offset
     ZPGX,
+    /// Zero page address with Y register offset
     ZPGY,
 }
 
+/// Operation for the instruction
 #[derive(Copy, Clone, Debug)]
 pub enum Operation {
     ADC,
@@ -81,6 +99,7 @@ pub enum Operation {
     TYA,
 }
 
+/// Describes an instruction i.e. operation with its addressing mode
 pub struct Instruction {
     pub opcode: u8,
     pub operation: Operation,
@@ -88,6 +107,7 @@ pub struct Instruction {
     pub cycles: u8,
 }
 
+/// Maps an opcode to an instruction
 pub fn opcode_to_instruction(opcode: u8) -> Instruction {
     match opcode {
         0x00 => Instruction {

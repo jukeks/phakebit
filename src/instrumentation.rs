@@ -1,15 +1,26 @@
+//! Contains the `Trace` struct and functions for printing it to stdout.
+
 use crate::instruction;
 use crate::instruction::AddressingMode;
 use crate::instruction::Instruction;
 
+/// Represents the state of the CPU after executing an instruction.
 pub struct Trace {
+    /// Address of the instruction that was just executed.
     pub pc: u16,
+    /// A register value
     pub a: u8,
+    /// X register value
     pub x: u8,
+    /// Y register value
     pub y: u8,
+    /// Stack pointer value
     pub sp: u8,
+    /// Status register value
     pub sr: u8,
+    /// The instruction that was executed
     pub instruction: Instruction,
+    /// Possible operand of the instruction
     pub operand: Option<u16>,
 }
 
@@ -36,6 +47,10 @@ impl Trace {
         }
     }
 
+    /// Prints the trace to stdout in the format of
+    /// ```text
+    /// PC   Op Oper   Disassembly   |A  X  Y  SP|NVDIZC|C
+    /// ```
     pub fn print(&self) {
         let n_flag = (self.sr >> 7) & 1;
         let v_flag = (self.sr >> 6) & 1;
