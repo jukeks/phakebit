@@ -11,7 +11,7 @@ use phakebit::cpu::CPU;
 use phakebit::state::CPUState;
 use phakebit::state;
 
-let mut memory = PlainMemory::new();
+let memory = PlainMemory::new();
 let mut cpu_state = CPUState::new(memory);
 // set reset vector to program start or just point `cpu_state.sp` address
 cpu_state.write_word(state::RESET_VECTOR_ADDR, 0x1234);
