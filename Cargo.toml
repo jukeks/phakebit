@@ -12,6 +12,7 @@ license = "MIT"
 homepage = "https://github.com/jukeks/phakebit"
 repository = "https://github.com/jukeks/phakebit"
 readme = "README.md"
+keywords = ["emulator", "6502"]
 
 [dev-dependencies]
 cargo-readme = "3.3.0"
