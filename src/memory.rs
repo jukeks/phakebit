@@ -2,7 +2,7 @@
 
 /// Abstract memory interface
 pub trait Memory {
-    fn get(&self, address: u16) -> u8;
+    fn get(&mut self, address: u16) -> u8;
     fn set(&mut self, address: u16, value: u8);
 }
 
@@ -20,7 +20,7 @@ impl PlainMemory {
 }
 
 impl Memory for PlainMemory {
-    fn get(&self, address: u16) -> u8 {
+    fn get(&mut self, address: u16) -> u8 {
         let idx = address as usize;
         self.state[idx]
     }
@@ -82,7 +82,7 @@ mod tests {
         }
 
         impl Memory for MappedMemory {
-            fn get(&self, address: u16) -> u8 {
+            fn get(&mut self, address: u16) -> u8 {
                 match address {
                     0x0000..=0x1FFF => self.state[address as usize],
                     0x2000..=0x3FFF => self.chip.borrow().read(),
