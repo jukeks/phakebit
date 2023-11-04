@@ -1,0 +1,13 @@
+[package]
+name = "phakebit-emulators"
+version = "0.1.2"
+edition = "2021"
+
+[[bin]]
+name = "turnip1"
+path = "turnip1/main.rs"
+
+[dependencies]
+argh = "0.1.12"
+console = "0.15.7"
+phakebit = "0.1.2"
