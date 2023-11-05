@@ -40,7 +40,7 @@ fn read_io(address: u16) -> u8 { 0 }
 fn write_io(address: u16, value: u8) {}
 
 impl Memory for MemoryMappedIO {
-   fn get(&mut self, address: u16) -> u8 {
+   fn get(&self, address: u16) -> u8 {
       match address {
         0x0000..=0x1FFF => self.state[address as usize],
         0x2000..=0x3FFF => read_io(address),
