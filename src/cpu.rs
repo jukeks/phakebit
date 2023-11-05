@@ -20,6 +20,10 @@ impl<T: Memory> CPU<T> {
         CPU { state: state }
     }
 
+    pub fn get_mut_state(&mut self) -> &mut CPUState<T> {
+        &mut self.state
+    }
+
     fn read_operand(&mut self, mode: AddressingMode) -> Option<u16> {
         match mode {
             AddressingMode::REL => Some(self.state.read_byte(self.state.pc) as u16),

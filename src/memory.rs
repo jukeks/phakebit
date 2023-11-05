@@ -2,7 +2,7 @@
 
 /// Abstract memory interface
 pub trait Memory {
-    fn get(&mut self, address: u16) -> u8;
+    fn get(&self, address: u16) -> u8;
     fn set(&mut self, address: u16, value: u8);
 }
 
@@ -20,7 +20,7 @@ impl PlainMemory {
 }
 
 impl Memory for PlainMemory {
-    fn get(&mut self, address: u16) -> u8 {
+    fn get(&self, address: u16) -> u8 {
         let idx = address as usize;
         self.state[idx]
     }
@@ -35,6 +35,8 @@ impl Memory for PlainMemory {
 mod tests {
     use std::cell::RefCell;
     use std::rc::Rc;
+
+    use crate::cpu::CPU;
 
     use super::Memory;
     use super::PlainMemory;
@@ -53,13 +55,18 @@ mod tests {
     fn memory_maps() {
         struct Chip {
             register: u8,
+            read_count: u8,
         }
 
         impl Chip {
             fn new() -> Chip {
-                Chip { register: 0 }
+                Chip {
+                    register: 0,
+                    read_count: 0,
+                }
             }
-            fn read(&self) -> u8 {
+            fn read(&mut self) -> u8 {
+                self.read_count += 1;
                 self.register
             }
             fn write(&mut self, value: u8) {
@@ -82,10 +89,10 @@ mod tests {
         }
 
         impl Memory for MappedMemory {
-            fn get(&mut self, address: u16) -> u8 {
+            fn get(&self, address: u16) -> u8 {
                 match address {
                     0x0000..=0x1FFF => self.state[address as usize],
-                    0x2000..=0x3FFF => self.chip.borrow().read(),
+                    0x2000..=0x3FFF => self.chip.borrow_mut().read(),
                     0x4000..=0xFFFF => self.state[address as usize],
                 }
             }
@@ -102,11 +109,16 @@ mod tests {
         let chip = Rc::new(RefCell::new(Chip::new()));
         let mut m = MappedMemory::new(chip.clone());
         m.set(0x2000, 0x01);
-        assert_eq!(chip.borrow().read(), 0x01);
+        assert_eq!(chip.borrow_mut().read(), 0x01);
         assert_eq!(m.get(0x2000), 0x01);
 
+        let cpu_state = crate::state::CPUState::new(m);
+        let mut cpu = CPU::new(cpu_state);
+
+        let state = cpu.get_mut_state();
+        assert_eq!(state.read_byte(0x2000), 0x01);
+
         (*chip).borrow_mut().write(0x02);
-        assert_eq!(m.get(0x2000), 0x02);
-        assert_eq!(chip.borrow().read(), 0x02);
+        assert_eq!(chip.borrow_mut().read(), 0x02);
     }
 }
