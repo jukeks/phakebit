@@ -10,4 +10,4 @@ path = "turnip1/main.rs"
 [dependencies]
 argh = "0.1.12"
 console = "0.15.7"
-phakebit = "0.1.2"
+phakebit = "= 0.1.2"
