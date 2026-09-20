@@ -301,6 +301,7 @@ impl<T: Memory> CPUState<T> {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use crate::memory::PlainMemory;
 
