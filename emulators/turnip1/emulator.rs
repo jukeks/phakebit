@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use std::sync::mpsc;
 
 use crate::{memory::MappedMemory, pia::PIAChip};
@@ -21,8 +19,7 @@ impl Emulator {
     }
 
     pub fn execute_program(self, program: Vec<u8>, load_address: u16, start_address: u16) {
-        let chip = Rc::new(RefCell::new(PIAChip::new(self.kbd_rx, self.dsp_tx)));
-
+        let chip = PIAChip::new(self.kbd_rx, self.dsp_tx);
         let mut mem = MappedMemory::new(chip);
 
         for (i, byte) in program.iter().enumerate() {
