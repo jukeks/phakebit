@@ -1,0 +1,13 @@
+#!/bin/sh
+# Keeps README.md in sync with the crate documentation in src/lib.rs.
+# README.md is generated, not written by hand. Edit src/lib.rs or README.tpl.
+set -e
+
+if ! command -v cargo-readme >/dev/null 2>&1; then
+    echo "pre-commit: cargo-readme is missing. Install it with:" >&2
+    echo "    cargo install cargo-readme --version 3.3.0" >&2
+    exit 1
+fi
+
+cargo readme -t README.tpl -o README.md
+git add README.md
