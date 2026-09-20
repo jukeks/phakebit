@@ -13,6 +13,12 @@ jobs:
           with:
               toolchain: stable
               override: true
+        - name: Install cargo-readme
+          run: cargo install cargo-readme --version 3.3.0
+        - name: Regenerate README from src/lib.rs
+          run: cargo readme -t README.tpl -o README.md
         - uses: katyo/publish-crates@v2
           with:
               registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+              # The README is generated, so the tree is dirty by design.
+              args: --allow-dirty
